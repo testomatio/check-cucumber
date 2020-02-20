@@ -8,7 +8,8 @@
   "dependencies": {
     "chalk": "^3.0.0",
     "commander": "^4.1.1",
-    "gherkin": "^9.0.0"
+    "gherkin": "^9.0.0",
+    "glob": "^7.1.6"
   },
   "bin": {
     "check-cucumber": "./bin/check.js"
