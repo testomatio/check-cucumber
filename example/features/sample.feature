@@ -7,5 +7,5 @@ Feature: Business rules
     Given I have a defined step
     When I open GitHub
   Scenario: do something twice
-    Given I have a defined step
-    When I open GitHub
+    Given I have a defined step 2
+    When I open GitHub 2

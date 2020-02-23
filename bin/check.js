@@ -17,11 +17,11 @@ program
     data.then(features => {
       const tests = [];
       for (const suite of features) {
-        for (const test of suite.scenario) {
-          tests.push({ name: test, suites: [suite.feature] });
+        for (const scenario of suite.scenario) {
+          const { name, description } = scenario;
+          tests.push({ name, suites: [suite.feature], description });
         }
       }
-
       const reporter = new Reporter(apiKey);
       reporter.addTests(tests);
       reporter.send();

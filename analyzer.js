@@ -49,8 +49,13 @@ const parseFile = file => {
         featureData['feature'] = data[0].gherkinDocument.feature.name;
         const scenarios = []
         for (let i = 1; i < data.length; i += 1) {
-          console.log('  -',data[i].pickle.name);
-          scenarios.push(data[i].pickle.name)
+          console.log('  -', data[i].pickle.name);
+          const description = data[i].pickle.steps.reduce((acc, step) => {
+            acc += `* ${step.text}\n`
+            return acc;
+          }, '');
+
+          scenarios.push({ name: data[i].pickle.name, description });
         }
         featureData['scenario'] = scenarios;
         console.log('\n');

@@ -7,5 +7,5 @@ Feature: Sample feature
     Given I have a defined step
     When I open GitHub
   Scenario: Sample BDD test twice - 2
-    Given I have a defined step
-    When I open GitHub
+    Given I have a defined step 2
+    When I open GitHub 2
