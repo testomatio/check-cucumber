@@ -81,35 +81,4 @@ const getScenarioCode = (source, feature, file) => {
   return scenarios;
 };
 
-const getScenarios = (feature, file) => {
-  const scenarios = [];
-  for (const featureChild of feature.children) {
-    const scenario = featureChild.scenario;
-    const { name, description } = scenario;
-    const scenarioJson = { name, file };
-    if (description) {
-      scenarioJson['description'] = description;
-    }
-    const { code, steps } = getCode(scenario);
-    scenarioJson['code'] = code;
-    scenarioJson['steps'] = steps;
-    scenarios.push(scenarioJson);
-  }
-
-  return scenarios;
-}
-
-const getCode = scenario => {
-  let code = `${scenario.keyword}: ${scenario.name} \n`;
-  const steps = [];
-  if (scenario.description) {
-    code += `${scenario.description}\n`;
-  }
-  for (const step of scenario.steps) {
-    code += `  ${step.keyword} ${step.text}\n`
-    steps.push(step.text);
-  }
-  return { code, steps };
-}
-
 module.exports = analyzeFeatureFiles;
