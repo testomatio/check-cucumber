@@ -3,7 +3,6 @@ const glob = require('glob')
 const path = require('path');
 const chalk = require('chalk');
 
-
 /**
  * 
  * @param {String} filePattern 
