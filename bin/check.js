@@ -18,7 +18,6 @@ program
       for (const suite of features) {
         for (const scenario of suite.scenario) {
           const { name, description, code, file, steps } = scenario;
-          console.log(code);
           tests.push({ name, suites: [suite.feature], description, code, file, steps });
         }
       }
