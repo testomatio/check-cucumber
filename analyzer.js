@@ -3,7 +3,6 @@ const glob = require('glob')
 const path = require('path');
 const chalk = require('chalk');
 
-
 /**
  * 
  * @param {String} filePattern 
@@ -32,7 +31,7 @@ const parseFile = file => {
   return new Promise((resolve, reject) => {
     try {
       const options = {
-        includeSource: false,
+        includeSource: true,
         includeGherkinDocument: true,
         includePickles: true,
       }
@@ -45,27 +44,39 @@ const parseFile = file => {
 
       stream.on('end', function () {
         console.log(chalk.cyan.bold(file))
-        console.log(' -', data[0].gherkinDocument.feature.name);
-        featureData['feature'] = data[0].gherkinDocument.feature.name;
-        const scenarios = []
-        for (let i = 1; i < data.length; i += 1) {
-          console.log('  -', data[i].pickle.name);
-          const description = data[i].pickle.steps.reduce((acc, step) => {
-            acc += `* ${step.text}\n`
-            return acc;
-          }, '');
-
-          scenarios.push({ name: data[i].pickle.name, description });
-        }
-        featureData['scenario'] = scenarios;
+        console.log(' -', data[1].gherkinDocument.feature.name);
+        featureData['feature'] = data[1].gherkinDocument.feature.name;
+        featureData['scenario'] = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         console.log('\n');
-
         resolve(featureData);
       });
     } catch (e) {
       reject(e);
     }
   })
+};
+
+const getScenarioCode = (source, feature, file) => {
+  const sourceArray = source.split('\n');
+  const scenarios = [];
+  for (let i = 0; i < feature.children.length; i++) {
+    const scenario = feature.children[i].scenario;
+    if (scenario) {
+      const steps = [];
+      const { name, description } = scenario;
+      const scenarioJson = { name, file };
+      const start = scenario.location.line - 1;
+      const end = ((i === feature.children.length - 1) ? sourceArray.length : feature.children[i + 1].scenario.location.line) - 1;
+      for (const step of scenario.steps) {
+        steps.push(step.text);
+      }
+      scenarioJson['code'] = sourceArray.slice(start, end).join('\n');
+      scenarioJson['steps'] = steps;
+      scenarios.push(scenarioJson);
+    }
+  }
+
+  return scenarios;
 };
 
 module.exports = analyzeFeatureFiles;

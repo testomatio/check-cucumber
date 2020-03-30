@@ -7,19 +7,18 @@ const Reporter = require('../reporter');
 
 
 console.log(chalk.cyan.bold('Cucumber checker by testomat.io'));
-const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'] || 'l5x5d5cd6pc3';
+const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'];
 
 program
-  .arguments('<files>')
   .option('-d, --dir <dir>', 'Test directory')
-  .action((files, opts) => {
-    const data = analyze(files, opts.dir || process.cwd());
+  .action((opts) => {
+    const data = analyze('**/*.feature', opts.dir || process.cwd());
     data.then(features => {
       const tests = [];
       for (const suite of features) {
         for (const scenario of suite.scenario) {
-          const { name, description } = scenario;
-          tests.push({ name, suites: [suite.feature], description });
+          const { name, description, code, file, steps } = scenario;
+          tests.push({ name, suites: [suite.feature], description, code, file, steps });
         }
       }
       const reporter = new Reporter(apiKey);
