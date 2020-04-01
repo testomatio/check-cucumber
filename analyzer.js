@@ -3,12 +3,16 @@ const glob = require('glob')
 const path = require('path');
 const chalk = require('chalk');
 
+let workDir;
+
 /**
  * 
  * @param {String} filePattern 
  * @param {String} dir 
  */
 const analyzeFeatureFiles = (filePattern, dir = '.') => {
+  workDir = dir;
+
   console.log('\nParsing files\n');
   pattern = path.join(dir, filePattern);
 
@@ -48,6 +52,7 @@ const parseFile = file => {
         featureData['feature'] = data[1].gherkinDocument.feature.name;
         featureData['scenario'] = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         console.log('\n');
+        console.log(featureData);
         resolve(featureData);
       });
     } catch (e) {
@@ -58,13 +63,14 @@ const parseFile = file => {
 
 const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
+  const fileName = file.replace(workDir + path.sep, '');
   const scenarios = [];
   for (let i = 0; i < feature.children.length; i++) {
     const scenario = feature.children[i].scenario;
     if (scenario) {
       const steps = [];
-      const { name, description } = scenario;
-      const scenarioJson = { name, file };
+      const { name } = scenario;
+      const scenarioJson = { name, file: fileName };
       const start = scenario.location.line - 1;
       const end = ((i === feature.children.length - 1) ? sourceArray.length : feature.children[i + 1].scenario.location.line) - 1;
       for (const step of scenario.steps) {
