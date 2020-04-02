@@ -52,7 +52,6 @@ const parseFile = file => {
         featureData['feature'] = data[1].gherkinDocument.feature.name;
         featureData['scenario'] = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         console.log('\n');
-        console.log(featureData);
         resolve(featureData);
       });
     } catch (e) {
