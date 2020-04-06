@@ -28,29 +28,33 @@ class Reporter {
         'Content-Length': Buffer.byteLength(data)
       },
     }, (resp) => {
-    
       // The whole response has been received. Print out the result.
+      let message = '';
+
       resp.on('end', () => {
-        console.log('Data sent to Testomat.io');
+        if (resp.statusCode !== 200) {
+          console.log(message, ' ✖️');
+        } else {
+          console.log('Data sent to Testomat.io 🎉');
+        }
       });
 
-      resp.on('error', () => {
-        console.log('Data was not sent to Testomat.io');
+      resp.on('data', (chunk) => {
+        message += chunk.toString();
       });
 
-      req.on("error", (err) => {
-        console.log("Error: " + err.message);
+      resp.on('aborted', () => {
+        console.log('Data was not sent to Testomat.io ✖️');
       });
-    
     });
 
     req.on("error", (err) => {
-      console.log("Error: " + err.message);
+      console.log("Error: Server cannot be reached", ' ✖️');
     });
 
     req.write(data)
-    req.end();    
-    
+    req.end();
+
   }
 
 }
