@@ -6,7 +6,7 @@ const analyze = require('../analyzer');
 const Reporter = require('../reporter');
 
 
-console.log(chalk.cyan.bold('Cucumber checker by testomat.io 🤩'));
+console.log(chalk.cyan.bold(' 🤩 Cucumber checker by testomat.io'));
 const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'];
 
 program

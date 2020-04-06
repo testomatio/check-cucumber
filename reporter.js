@@ -20,7 +20,7 @@ class Reporter {
 
     const data = JSON.stringify(this.tests);
 
-    console.log('Sending data to testomat.io 🚀');
+    console.log('\n 🚀 Sending data to testomat.io\n');
     const req = request(URL + '?api_key=' + this.apiKey, {
       method: 'POST',
       headers: {
@@ -33,9 +33,9 @@ class Reporter {
 
       resp.on('end', () => {
         if (resp.statusCode !== 200) {
-          console.log(message, ' ✖️');
+          console.log(' ✖️ ', message);
         } else {
-          console.log('Data sent to Testomat.io 🎉');
+          console.log(' 🎉 Data sent to Testomat.io');
         }
       });
 
@@ -44,7 +44,7 @@ class Reporter {
       });
 
       resp.on('aborted', () => {
-        console.log('Data was not sent to Testomat.io ✖️');
+        console.log(' ✖️ Data was not sent to Testomat.io');
       });
     });
 

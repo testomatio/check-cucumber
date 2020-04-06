@@ -13,7 +13,7 @@ let workDir;
 const analyzeFeatureFiles = (filePattern, dir = '.') => {
   workDir = dir;
 
-  console.log('\nParsing files 🗄️ \n');
+  console.log('\n 🗄️  Parsing files\n');
   pattern = path.join(dir, filePattern);
 
   const promise = new Promise((resolve, reject) => {
@@ -47,9 +47,9 @@ const parseFile = file => {
       });
 
       stream.on('end', function () {
-        console.log('___________________________');
+        console.log('___________________________\n');
         const fileName = file.replace(workDir + path.sep, '');
-        console.log('File : ', fileName , ' 🗒️ \n');
+        console.log(' 🗒️  File : ', fileName , '\n');
         console.log('= ', data[1].gherkinDocument.feature.name);
         featureData['feature'] = data[1].gherkinDocument.feature.name;
         featureData['scenario'] = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
