@@ -23,6 +23,7 @@ program
       }
       const reporter = new Reporter(apiKey);
       reporter.addTests(tests);
+      console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length}`));
       reporter.send();
     })
   });
