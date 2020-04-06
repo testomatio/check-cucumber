@@ -17,4 +17,13 @@ defineSupportCode(function({Given, When, Then}) {
     assert('a' === 'a');
   });
 
+  Given('I have a defined step 2', () => {
+    a = 1;
+    assert(a === 1);
+  });
+  
+  Given('I open GitHub 2', () => {
+    assert('a' === 'a');
+  });
+
 });

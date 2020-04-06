@@ -47,12 +47,13 @@ const parseFile = file => {
       });
 
       stream.on('end', function () {
-        console.log(chalk.cyan.bold(file))
-        console.log(' -', data[1].gherkinDocument.feature.name);
+        console.log('___________________________');
+        const fileName = file.replace(workDir + path.sep, '');
+        console.log('File : ', fileName , '\n');
+        console.log('= ', data[1].gherkinDocument.feature.name);
         featureData['feature'] = data[1].gherkinDocument.feature.name;
         featureData['scenario'] = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         console.log('\n');
-        console.log(featureData);
         resolve(featureData);
       });
     } catch (e) {
@@ -67,6 +68,7 @@ const getScenarioCode = (source, feature, file) => {
   const scenarios = [];
   for (let i = 0; i < feature.children.length; i++) {
     const scenario = feature.children[i].scenario;
+    console.log(' - ', scenario.name);
     if (scenario) {
       const steps = [];
       const { name } = scenario;
