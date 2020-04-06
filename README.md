@@ -17,9 +17,8 @@ TESTOMATIO=bu8e29984sqd npx check-cucumber -d ~/Documents/testomat/workspace/rep
 
 ### Sample Output
 
-List CodeceptJS tests
+![check-cucumber-output](https://user-images.githubusercontent.com/24666922/78535356-a4043780-7809-11ea-8b84-cbde1bb1522c.png)
 
-[![](https://user-images.githubusercontent.com/220264/71489974-1fc90e00-2831-11ea-8f38-1a2c2a92400e.png)](https://user-images.githubusercontent.com/220264/71489974-1fc90e00-2831-11ea-8f38-1a2c2a92400e.png)
 
 
 ## [](https://github.com/testomatio/check-tests#license-mit)License MIT
