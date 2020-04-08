@@ -3,7 +3,6 @@ const isHttps = URL.startsWith('https');
 const { request } = isHttps ? require('https') : require('http');
 
 class Reporter {
-
   constructor(apiKey) {
     if (!apiKey) {
       console.error('Cant send report, api key not set');
@@ -17,42 +16,43 @@ class Reporter {
   }
 
   send() {
-
     const data = JSON.stringify(this.tests);
 
-    console.log('Sending data to testomat.io');
-    const req = request(URL + '?api_key=' + this.apiKey, {
+    console.log('\n 🚀 Sending data to testomat.io\n');
+    const req = request(`${URL} + ?api_key= + this.apiKey`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
+        'Content-Length': Buffer.byteLength(data),
       },
     }, (resp) => {
-    
       // The whole response has been received. Print out the result.
+      let message = '';
+
       resp.on('end', () => {
-        console.log('Data sent to Testomat.io');
+        if (resp.statusCode !== 200) {
+          console.log(' ✖️ ', message);
+        } else {
+          console.log(' 🎉 Data sent to Testomat.io');
+        }
       });
 
-      resp.on('error', () => {
-        console.log('Data was not sent to Testomat.io');
+      resp.on('data', (chunk) => {
+        message += chunk.toString();
       });
 
-      req.on("error", (err) => {
-        console.log("Error: " + err.message);
+      resp.on('aborted', () => {
+        console.log(' ✖️ Data was not sent to Testomat.io');
       });
-    
     });
 
-    req.on("error", (err) => {
-      console.log("Error: " + err.message);
+    req.on('error', () => {
+      console.log('Error: Server cannot be reached', ' ✖️');
     });
 
-    req.write(data)
-    req.end();    
-    
+    req.write(data);
+    req.end();
   }
-
 }
 
 module.exports = Reporter;
