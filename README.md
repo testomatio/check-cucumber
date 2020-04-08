@@ -5,8 +5,9 @@ Use this checker as CLI tool.
 
 Run  `check-cucumber`  via npx:
 
-TESTOMATIO=bu8e29984sqd npx check-cucumber -d ~/Documents/testomat/workspace/reporter/example/cucumber 
+TESTOMATIO=API_KEY npx check-cucumber -d ~/Documents/testomat/workspace/reporter/example/cucumber 
 
+**Note: replace API_KEY wit key from testomat.io**
 
 ### CLI Options:
 
@@ -17,7 +18,7 @@ TESTOMATIO=bu8e29984sqd npx check-cucumber -d ~/Documents/testomat/workspace/rep
 
 ### Sample Output
 
-![check-cucumber-output](https://user-images.githubusercontent.com/24666922/78535356-a4043780-7809-11ea-8b84-cbde1bb1522c.png)
+![check-cucumber-output](https://user-images.githubusercontent.com/24666922/78559548-2dc7fb00-7832-11ea-8c69-0722222a82fe.png)
 
 
 
