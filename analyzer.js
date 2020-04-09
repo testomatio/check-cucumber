@@ -45,13 +45,15 @@ const parseFile = file => {
       });
 
       stream.on('end', () => {
-        console.log('___________________________\n');
         const fileName = file.replace(workDir + path.sep, '');
-        console.log(' 🗒️  File : ', fileName, '\n');
-        console.log('= ', data[1].gherkinDocument.feature.name);
-        featureData.feature = data[1].gherkinDocument.feature.name;
-        featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
-        console.log('\n');
+        if (!fileName.includes('node_modules')) {
+          console.log('___________________________\n');
+          console.log(' 🗒️  File : ', fileName, '\n');
+          console.log('= ', data[1].gherkinDocument.feature.name);
+          featureData.feature = data[1].gherkinDocument.feature.name;
+          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+          console.log('\n');
+        }
         resolve(featureData);
       });
     } catch (e) {
