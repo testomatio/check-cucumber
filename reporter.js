@@ -20,7 +20,7 @@ class Reporter {
       const data = JSON.stringify(this.tests);
 
       console.log('\n 🚀 Sending data to testomat.io\n');
-      const req = request(`${URL} + ?api_key= + this.apiKey`, {
+      const req = request(`${URL}?api_key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
