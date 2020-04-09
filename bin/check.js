@@ -25,10 +25,15 @@ program
           });
         }
       }
-      const reporter = new Reporter(apiKey);
-      reporter.addTests(tests);
-      console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length}`));
-      reporter.send();
+      if (tests.length) {
+        const reporter = new Reporter(apiKey);
+        reporter.addTests(tests);
+        console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length}`));
+        reporter.send();
+      } else {
+        console.log('Can\'t find any tests in this folder');
+        console.log('Change file pattern or directory to scan to find test files:\n\nUsage: npx check-cucumber -d[directory]');
+      }
     });
   });
 
