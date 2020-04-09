@@ -10,8 +10,8 @@ const getScenarioCode = (source, feature, file) => {
   const scenarios = [];
   for (let i = 0; i < feature.children.length; i += 1) {
     const { scenario } = feature.children[i];
-    console.log(' - ', scenario.name);
     if (scenario) {
+      console.log(' - ', scenario.name);
       const steps = [];
       const { name } = scenario;
       const scenarioJson = { name, file: fileName };
