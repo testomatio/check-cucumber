@@ -14,21 +14,27 @@ program
   .action((opts) => {
     const data = analyze('**/*.feature', opts.dir || process.cwd());
     data.then(features => {
+      let scenarioSkipped = 0;
       const tests = [];
       for (const suite of features) {
         for (const scenario of suite.scenario) {
           const {
             name, description, code, file, steps,
           } = scenario;
-          tests.push({
-            name, suites: [suite.feature], description, code, file, steps,
-          });
+          if (name) {
+            tests.push({
+              name, suites: [suite.feature], description, code, file, steps,
+            });
+          } else {
+            scenarioSkipped += 1;
+          }
         }
       }
       if (tests.length) {
         const reporter = new Reporter(apiKey);
         reporter.addTests(tests);
         console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length}`));
+        if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}`));
         reporter.send();
       } else {
         console.log('Can\'t find any tests in this folder');

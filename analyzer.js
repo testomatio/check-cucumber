@@ -1,4 +1,5 @@
 const Gherkin = require('gherkin').default;
+const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
 
@@ -11,7 +12,11 @@ const getScenarioCode = (source, feature, file) => {
   for (let i = 0; i < feature.children.length; i += 1) {
     const { scenario } = feature.children[i];
     if (scenario) {
-      console.log(' - ', scenario.name);
+      if (!scenario.name) {
+        console.log(chalk.red('Title of scenario cannot be empty, So skipping this'));
+      } else {
+        console.log(' - ', scenario.name);
+      }
       const steps = [];
       const { name } = scenario;
       const scenarioJson = { name, file: fileName };
