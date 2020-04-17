@@ -17,7 +17,7 @@ class Reporter {
 
   send() {
     if (this.apiKey) {
-      const data = JSON.stringify(this.tests);
+      const data = JSON.stringify({ tests: this.tests, framework: 'Cucumber' });
 
       console.log('\n 🚀 Sending data to testomat.io\n');
       const req = request(`${URL}?api_key=${this.apiKey}`, {
