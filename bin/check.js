@@ -31,7 +31,7 @@ program
               scenarioSkipped += 1;
             }
           }
-        } else {
+        } else if (suite.error) {
           errors.push(suite.error);
         }
       }

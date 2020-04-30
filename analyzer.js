@@ -42,7 +42,6 @@ const getScenarioCode = (source, feature, file) => {
         steps.push(step.text);
       }
       scenarioJson.code = sourceArray.slice(start, end).join('\n');
-      console.log(scenarioJson.code);
       scenarioJson.steps = steps;
       scenarios.push(scenarioJson);
     }
