@@ -5,6 +5,23 @@ const path = require('path');
 
 let workDir;
 
+const getLocation = scenario => (scenario.tags.length ? scenario.tags[0].location.line - 1 : scenario.location.line - 1);
+
+const getTitle = scenario => {
+  let { name } = scenario;
+
+  if (scenario.tags.length) {
+    let tags = '-';
+    for (const tag of scenario.tags) {
+      tags = `${tags} ${tag.name}`;
+    }
+
+    name = `${name} ${tags}`;
+  }
+
+  return name;
+};
+
 const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
   const fileName = file.replace(workDir + path.sep, '');
@@ -18,10 +35,9 @@ const getScenarioCode = (source, feature, file) => {
         console.log(' - ', scenario.name);
       }
       const steps = [];
-      const { name } = scenario;
-      const scenarioJson = { name, file: fileName };
-      const start = scenario.location.line - 1;
-      const end = ((i === feature.children.length - 1) ? sourceArray.length : feature.children[i + 1].scenario.location.line) - 1;
+      const scenarioJson = { name: getTitle(scenario), file: fileName };
+      const start = getLocation(scenario);
+      const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
       for (const step of scenario.steps) {
         steps.push(step.text);
       }
@@ -54,9 +70,14 @@ const parseFile = file => {
         if (!fileName.includes('node_modules')) {
           console.log('___________________________\n');
           console.log(' 🗒️  File : ', fileName, '\n');
-          console.log('= ', data[1].gherkinDocument.feature.name);
-          featureData.feature = data[1].gherkinDocument.feature.name;
-          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+          if (data[1].gherkinDocument) {
+            console.log('= ', data[1].gherkinDocument.feature.name);
+            featureData.feature = data[1].gherkinDocument.feature.name;
+            featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+          } else {
+            featureData.error = `${fileName} : ${data[1].attachment.data}`;
+            console.log(chalk.red(`Wrong format,  So skipping this: ${data[1].attachment.data}`));
+          }
           console.log('\n');
         }
         resolve(featureData);

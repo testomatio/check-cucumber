@@ -16,25 +16,36 @@ program
     data.then(features => {
       let scenarioSkipped = 0;
       const tests = [];
+      const errors = [];
       for (const suite of features) {
-        for (const scenario of suite.scenario) {
-          const {
-            name, description, code, file, steps,
-          } = scenario;
-          if (name) {
-            tests.push({
-              name, suites: [suite.feature], description, code, file, steps,
-            });
-          } else {
-            scenarioSkipped += 1;
+        if (suite.scenario) {
+          for (const scenario of suite.scenario) {
+            const {
+              name, description, code, file, steps,
+            } = scenario;
+            if (name) {
+              tests.push({
+                name, suites: [suite.feature], description, code, file, steps,
+              });
+            } else {
+              scenarioSkipped += 1;
+            }
           }
+        } else if (suite.error) {
+          errors.push(suite.error);
         }
       }
       if (tests.length) {
         const reporter = new Reporter(apiKey);
         reporter.addTests(tests);
-        console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length}`));
-        if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}`));
+        console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length} \n`));
+        if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}\n`));
+        if (errors.length) {
+          console.log(chalk.red.bold('Errors :'));
+          for (const error of errors) {
+            console.log(chalk.red(error));
+          }
+        }
         reporter.send();
       } else {
         console.log('Can\'t find any tests in this folder');
