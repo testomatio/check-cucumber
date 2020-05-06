@@ -3,21 +3,26 @@ const isHttps = URL.startsWith('https');
 const { request } = isHttps ? require('https') : require('http');
 
 class Reporter {
-  constructor(apiKey) {
+  constructor(apiKey, isCodecept) {
     if (!apiKey) {
       console.error('✖️  Cant send report, api key not set');
     }
     this.apiKey = apiKey;
     this.tests = [];
+    this.isCodecept = !!isCodecept;
   }
 
   addTests(tests) {
     this.tests = this.tests.concat(tests);
   }
 
+  getFramework() {
+    return this.isCodecept ? 'codeceptjs' : 'Cucumber'
+  }
+
   send() {
     if (this.apiKey) {
-      const data = JSON.stringify({ tests: this.tests, framework: 'Cucumber' });
+      const data = JSON.stringify({ tests: this.tests, framework: this.getFramework(), language: 'gherkin' });
 
       console.log('\n 🚀 Sending data to testomat.io\n');
       const req = request(`${URL}?api_key=${this.apiKey}`, {
