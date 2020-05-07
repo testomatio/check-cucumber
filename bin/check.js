@@ -11,7 +11,7 @@ const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'];
 
 program
   .option('-d, --dir <dir>', 'Test directory')
-  .option('-c, --codecept <codecept>', 'Is codeceptJS project')
+  .option('-c, --codeceptjs', 'Is codeceptJS project')
   .action((opts) => {
     const data = analyze('**/*.feature', opts.dir || process.cwd());
     data.then(features => {
@@ -37,7 +37,7 @@ program
         }
       }
       if (tests.length) {
-        const reporter = new Reporter(apiKey, opts.codecept);
+        const reporter = new Reporter(apiKey, opts.codeceptjs);
         reporter.addTests(tests);
         console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length} \n`));
         if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}\n`));

@@ -12,7 +12,7 @@ TESTOMATIO=API_KEY npx check-cucumber -d ~/Documents/testomat/workspace/reporter
 ### CLI Options:
 
 -   `-d, --dir` - Directory of the project
--   `-c, --codecept` - If it is codecept project use this option with value `true` (check-cucumber -c true)
+-   `-c, --codeceptjs` - If it is codecept project use this option
 
 **Note :** Running this will create Suites with folder and file name as sub suites. 
 
