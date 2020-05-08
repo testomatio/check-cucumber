@@ -11,12 +11,12 @@ const getTitle = scenario => {
   let { name } = scenario;
 
   if (scenario.tags.length) {
-    let tags = '-';
+    let tags = '';
     for (const tag of scenario.tags) {
       tags = `${tags} ${tag.name}`;
     }
 
-    name = `${name} ${tags}`;
+    name = `${name}${tags}`;
   }
 
   return name;
