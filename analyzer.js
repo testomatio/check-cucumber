@@ -39,7 +39,7 @@ const getScenarioCode = (source, feature, file) => {
       const start = getLocation(scenario);
       const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
       for (const step of scenario.steps) {
-        steps.push(step.text);
+        steps.push({ title: step.text, keyword: step.keyword.trim() });
       }
       scenarioJson.code = sourceArray.slice(start, end).join('\n');
       scenarioJson.steps = steps;
