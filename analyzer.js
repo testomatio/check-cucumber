@@ -4,6 +4,7 @@ const glob = require('glob');
 const path = require('path');
 
 let workDir;
+const invalidKeys = ['And', 'But'];
 
 const getLocation = scenario => (scenario.tags.length ? scenario.tags[0].location.line - 1 : scenario.location.line - 1);
 
@@ -35,11 +36,18 @@ const getScenarioCode = (source, feature, file) => {
         console.log(' - ', scenario.name);
       }
       const steps = [];
+      let previousValidStep = '';
       const scenarioJson = { name: getTitle(scenario), file: fileName };
       const start = getLocation(scenario);
       const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
       for (const step of scenario.steps) {
-        steps.push({ title: step.text, keyword: step.keyword.trim() });
+        let keyword = step.keyword.trim();
+        if (invalidKeys.includes(keyword)) {
+          keyword = previousValidStep;
+        } else {
+          previousValidStep = keyword;
+        }
+        steps.push({ title: step.text, keyword });
       }
       scenarioJson.code = sourceArray.slice(start, end).join('\n');
       scenarioJson.steps = steps;
