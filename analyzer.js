@@ -23,17 +23,6 @@ const getTitle = scenario => {
   return name;
 };
 
-const getPreviousValidStep = (steps) => {
-  for (let i = steps.length - 1; i >= 0; i -= 1) {
-    if (!invalidKeys.includes(steps[i].keyword)) {
-      return steps[i].keyword;
-    }
-  }
-
-  return steps[0].keyword;
-};
-
-
 const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
   const fileName = file.replace(workDir + path.sep, '');
@@ -47,13 +36,16 @@ const getScenarioCode = (source, feature, file) => {
         console.log(' - ', scenario.name);
       }
       const steps = [];
+      let previousValidStep = '';
       const scenarioJson = { name: getTitle(scenario), file: fileName };
       const start = getLocation(scenario);
       const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
       for (const step of scenario.steps) {
         let keyword = step.keyword.trim();
         if (invalidKeys.includes(keyword)) {
-          keyword = getPreviousValidStep(steps);
+          keyword = previousValidStep;
+        } else {
+          previousValidStep = keyword;
         }
         steps.push({ title: step.text, keyword });
       }
