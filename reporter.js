@@ -25,7 +25,7 @@ class Reporter {
       const data = JSON.stringify({ tests: this.tests, framework: this.getFramework(), language: 'gherkin' });
 
       console.log('\n 🚀 Sending data to testomat.io\n');
-      const req = request(`${URL}/api/load?api_key=${this.apiKey}`, {
+      const req = request(`${URL.trim()}/api/load?api_key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ program
         }
       }
       if (tests.length) {
-        const reporter = new Reporter(apiKey, opts.codeceptjs);
+        const reporter = new Reporter(apiKey.trim(), opts.codeceptjs);
         reporter.addTests(tests);
         console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length} \n`));
         if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}\n`));
