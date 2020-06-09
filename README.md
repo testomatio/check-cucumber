@@ -16,6 +16,13 @@ TESTOMATIO=API_KEY npx check-cucumber -d ~/Documents/testomat/workspace/reporter
 
 **Note :** Running this will create Suites with folder and file name as sub suites. 
 
+### Development
+
+To change host of endpoint for receiving data, and set it to other than app.testomat.io use TESTOMATIO_URL environment variable:
+
+TESTOMATIO_URL=http://beta.testomat.io
+
+
 
 ### Sample Output
 
