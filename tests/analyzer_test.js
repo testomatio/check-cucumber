@@ -1,0 +1,45 @@
+const analyse = require('../analyzer');
+const { expect } = require('chai');
+const path = require('path');
+
+describe('Analyzer', () => {
+  it('Should parse feature files', async () => {
+    const features = await analyse('**/valid*.feature', path.join(__dirname, '..', 'example'));
+    const featureTitles = features.map(featureData => featureData.feature);
+    const scenarios = features.reduce((acc, feature) => {
+      acc.push(...feature.scenario);
+      return acc;
+    }, []);
+
+    expect(features.length).equal(2);
+    expect(featureTitles).to.include('Google search');
+    expect(featureTitles).to.include('Business rules');
+    expect(scenarios.length).equal(5);
+  });
+
+  it('Should not include "And" or "But" in steps', async () => {
+    const features = await analyse('**/*google.feature', path.join(__dirname, '..', 'example'));
+    const scenarios = features.reduce((acc, feature) => {
+      acc.push(...feature.scenario);
+      return acc;
+    }, []);
+
+    const steps = scenarios.reduce((acc, scenario) => {
+      for (const step of scenario.steps) {
+        acc.push(step.keyword);
+      }
+      return acc;
+    }, []);
+
+    expect(steps).to.not.include('And');
+    expect(steps).to.not.include('But');
+    expect(steps).to.include('Then');
+    expect(steps).to.include('Given');
+    expect(steps).to.include('When');
+  });
+
+  it('Should have error messages for wrong formats', async () => {
+    const features = await analyse('**/error_file.feature', path.join(__dirname, '..', 'example'));
+    expect(features[0].error).not.equal(undefined);
+  });
+});

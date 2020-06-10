@@ -17,7 +17,7 @@ class Reporter {
   }
 
   getFramework() {
-    return this.isCodecept ? 'codeceptjs' : 'Cucumber'
+    return this.isCodecept ? 'codeceptjs' : 'Cucumber';
   }
 
   send() {
