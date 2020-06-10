@@ -1,6 +1,6 @@
-const analyse = require('../analyzer');
 const { expect } = require('chai');
 const path = require('path');
+const analyse = require('../analyzer');
 
 describe('Analyzer', () => {
   it('Should parse feature files', async () => {
@@ -24,17 +24,21 @@ describe('Analyzer', () => {
       return acc;
     }, []);
 
+    const stepsMap = {};
     const steps = scenarios.reduce((acc, scenario) => {
       for (const step of scenario.steps) {
         acc.push(step.keyword);
+        stepsMap[step.title] = step.keyword;
       }
       return acc;
     }, []);
 
     expect(steps).to.not.include('And');
     expect(steps).to.not.include('But');
-    expect(steps).to.include('Then');
+    expect(stepsMap['This step keyword should not be taken']).equal('Then');
+    expect(stepsMap['This should be replaced with Given']).equal('Given');
     expect(steps).to.include('Given');
+    expect(steps).to.include('When');
     expect(steps).to.include('When');
   });
 

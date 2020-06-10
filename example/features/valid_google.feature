@@ -4,7 +4,7 @@ Feature: Google search
   Scenario: Search testomat in google
   For google serach get result
     Given I search testomat in google
-    And I click on the first result
+    And This should be replaced with Given
     Then I get result of testomat.io
 
   Scenario: Search testomat.io in google
