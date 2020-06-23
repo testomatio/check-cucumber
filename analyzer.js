@@ -75,7 +75,8 @@ const parseFile = file => {
 
       stream.on('end', () => {
         const fileName = file.replace(workDir + path.sep, '');
-        if (!fileName.includes('node_modules')) {
+        // \n is screened on windows, so let's check for ode_modules here
+        if (!fileName.includes('ode_modules')) {
           console.log('___________________________\n');
           console.log(' 🗒️  File : ', fileName, '\n');
           if (data[1].gherkinDocument) {
