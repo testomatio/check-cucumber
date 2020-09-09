@@ -4,10 +4,11 @@ const program = require('commander');
 const chalk = require('chalk');
 const analyze = require('../analyzer');
 const Reporter = require('../reporter');
-
+const fs = require('fs');
+const path = require('path');
 
 console.log(chalk.cyan.bold(' 🤩 Cucumber checker by testomat.io'));
-const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'];
+const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env['TESTOMATIO'] || '';
 
 program
   .option('-d, --dir <dir>', 'Test directory')
@@ -18,12 +19,14 @@ program
       let scenarioSkipped = 0;
       const tests = [];
       const errors = [];
+      const files = {};
       for (const suite of features) {
         if (suite.scenario) {
           for (const scenario of suite.scenario) {
             const {
               name, description, code, file, steps,
             } = scenario;
+            files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
             if (name) {
               tests.push({
                 name, suites: [suite.feature], description, code, file, steps,
@@ -39,6 +42,7 @@ program
       if (tests.length) {
         const reporter = new Reporter(apiKey.trim(), opts.codeceptjs);
         reporter.addTests(tests);
+        reporter.addFiles(files);
         console.log(chalk.greenBright.bold(`Total Scenarios found ${tests.length} \n`));
         if (scenarioSkipped) console.log(chalk.red.bold(`Total Scenarios skipped ${scenarioSkipped}\n`));
         if (errors.length) {

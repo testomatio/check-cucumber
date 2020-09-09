@@ -9,11 +9,16 @@ class Reporter {
     }
     this.apiKey = apiKey;
     this.tests = [];
+    this.files = {};
     this.isCodecept = !!isCodecept;
   }
 
   addTests(tests) {
     this.tests = this.tests.concat(tests);
+  }
+
+  addFiles(files) {
+    this.files = files;
   }
 
   getFramework() {
@@ -22,7 +27,7 @@ class Reporter {
 
   send() {
     if (this.apiKey) {
-      const data = JSON.stringify({ tests: this.tests, framework: this.getFramework(), language: 'gherkin' });
+      const data = JSON.stringify({ tests: this.tests, files: this.files, framework: this.getFramework(), language: 'gherkin' });
 
       console.log('\n 🚀 Sending data to testomat.io\n');
       const req = request(`${URL.trim()}/api/load?api_key=${this.apiKey}`, {

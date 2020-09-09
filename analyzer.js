@@ -2,6 +2,8 @@ const Gherkin = require('gherkin').default;
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
+const fs = require('fs');
+
 
 let workDir;
 const invalidKeys = ['And', 'But'];
@@ -112,7 +114,8 @@ const analyzeFeatureFiles = (filePattern, dir = '.') => {
     const promiseArray = [];
     glob(pattern, (er, files) => {
       for (const file of files) {
-        promiseArray.push(parseFile(file));
+        let data = parseFile(file);
+        promiseArray.push(data);
       }
 
       const resultArray = Promise.all(promiseArray);
