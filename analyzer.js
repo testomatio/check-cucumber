@@ -27,7 +27,7 @@ const getTitle = scenario => {
 
 const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
-  const fileName = file.replace(workDir + path.sep, '');
+  const fileName = path.relative(workDir, file);
   const scenarios = [];
   for (let i = 0; i < feature.children.length; i += 1) {
     const { scenario } = feature.children[i];
