@@ -2,7 +2,6 @@ const Gherkin = require('gherkin').default;
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
-const fs = require('fs');
 
 
 let workDir;
@@ -51,6 +50,7 @@ const getScenarioCode = (source, feature, file) => {
         }
         steps.push({ title: step.text, keyword });
       }
+      scenarioJson.line = start;
       scenarioJson.code = sourceArray.slice(start, end).join('\n');
       scenarioJson.steps = steps;
       scenarios.push(scenarioJson);
@@ -60,44 +60,42 @@ const getScenarioCode = (source, feature, file) => {
   return scenarios;
 };
 
-const parseFile = file => {
-  return new Promise((resolve, reject) => {
-    try {
-      const options = {
-        includeSource: true,
-        includeGherkinDocument: true,
-        includePickles: true,
-      };
-      const stream = Gherkin.fromPaths([file], options);
-      const data = [];
-      const featureData = {};
-      stream.on('data', (chunk) => {
-        data.push(chunk);
-      });
+const parseFile = file => new Promise((resolve, reject) => {
+  try {
+    const options = {
+      includeSource: true,
+      includeGherkinDocument: true,
+      includePickles: true,
+    };
+    const stream = Gherkin.fromPaths([file], options);
+    const data = [];
+    const featureData = {};
+    stream.on('data', (chunk) => {
+      data.push(chunk);
+    });
 
-      stream.on('end', () => {
-        const fileName = file.replace(workDir + path.sep, '');
-        // \n is screened on windows, so let's check for ode_modules here
-        if (!fileName.includes('ode_modules')) {
-          console.log('___________________________\n');
-          console.log(' 🗒️  File : ', fileName, '\n');
-          if (data[1].gherkinDocument) {
-            console.log('= ', data[1].gherkinDocument.feature.name);
-            featureData.feature = data[1].gherkinDocument.feature.name;
-            featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
-          } else {
-            featureData.error = `${fileName} : ${data[1].attachment.data}`;
-            console.log(chalk.red(`Wrong format,  So skipping this: ${data[1].attachment.data}`));
-          }
-          console.log('\n');
+    stream.on('end', () => {
+      const fileName = file.replace(workDir + path.sep, '');
+      // \n is screened on windows, so let's check for ode_modules here
+      if (!fileName.includes('ode_modules')) {
+        console.log('___________________________\n');
+        console.log(' 🗒️  File : ', fileName, '\n');
+        if (data[1].gherkinDocument) {
+          console.log('= ', data[1].gherkinDocument.feature.name);
+          featureData.feature = getTitle(data[1].gherkinDocument.feature);
+          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+        } else {
+          featureData.error = `${fileName} : ${data[1].attachment.data}`;
+          console.log(chalk.red(`Wrong format,  So skipping this: ${data[1].attachment.data}`));
         }
-        resolve(featureData);
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
-};
+        console.log('\n');
+      }
+      resolve(featureData);
+    });
+  } catch (e) {
+    reject(e);
+  }
+});
 
 /**
  *
@@ -114,7 +112,7 @@ const analyzeFeatureFiles = (filePattern, dir = '.') => {
     const promiseArray = [];
     glob(pattern, (er, files) => {
       for (const file of files) {
-        let data = parseFile(file);
+        const data = parseFile(file);
         promiseArray.push(data);
       }
 
