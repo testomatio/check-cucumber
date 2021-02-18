@@ -8,7 +8,9 @@ const analyze = require('../analyzer');
 const Reporter = require('../reporter');
 const { updateFiles } = require('../util');
 
-console.log(chalk.cyan.bold(' 🤩 Cucumber checker by testomat.io'));
+const version = JSON.parse(fs.readFileSync(path.join(__dirname,'../package.json')).toString()).version;
+
+console.log(chalk.cyan.bold(' 🤩 Cucumber checker by Testomat.io v'+version));
 const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env.TESTOMATIO || '';
 
 program
