@@ -1096,6 +1096,11 @@ inquirer@^7.0.0:
     strip-ansi "^6.0.0"
     through "^2.3.6"
 
+insert-line@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/insert-line/-/insert-line-1.1.0.tgz#6dcc0003505f009a2ba8e8ed6a4d42386439fd0f"
+  integrity sha1-bcwAA1BfAJorqOjtak1COGQ5/Q8=
+
 is-arrayish@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
