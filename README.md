@@ -40,6 +40,8 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --update-ids
 Scenarios should already be imported into Testomatio
 
 
-### [](https://github.com/testomatio/check-tests#license-mit)License MIT
+---
+
+License MIT.
 
 Part of  [Testomat.io](https://testomat.io/)
