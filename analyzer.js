@@ -28,11 +28,12 @@ const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
   const fileName = path.relative(workDir, file);
   const scenarios = [];
+
   for (let i = 0; i < feature.children.length; i += 1) {
     const { scenario } = feature.children[i];
     if (scenario) {
       if (!scenario.name) {
-        console.log(chalk.red('Title of scenario cannot be empty, So skipping this'));
+        console.log(chalk.red('Title of scenario cannot be empty, skipping this'));
       } else {
         console.log(' - ', scenario.name);
       }
@@ -83,6 +84,10 @@ const parseFile = file => new Promise((resolve, reject) => {
         if (data[1].gherkinDocument) {
           console.log('= ', data[1].gherkinDocument.feature.name);
           featureData.feature = getTitle(data[1].gherkinDocument.feature);
+          if (!featureData.feature) {
+            console.log(chalk.red(`Title for feature is empty, skipping`));
+            featureData.error = `${fileName} : Empty feature`;
+          }
           featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         } else {
           featureData.error = `${fileName} : ${data[1].attachment.data}`;

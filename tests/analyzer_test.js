@@ -46,4 +46,10 @@ describe('Analyzer', () => {
     const features = await analyse('**/error_file.feature', path.join(__dirname, '..', 'example'));
     expect(features[0].error).not.equal(undefined);
   });
+
+  it('Should parse empty', async () => {
+    const features = await analyse('**/empty.feature', path.join(__dirname, '..', 'example'));
+    expect(features[0].error).not.equal(undefined);
+  });
+
 });
