@@ -57,47 +57,52 @@ class Reporter {
     });
   }
 
-  send() {
-    if (this.apiKey) {
-      const data = JSON.stringify({
-        tests: this.tests, files: this.files, framework: this.getFramework(), language: 'gherkin',
-      });
-
-      console.log('\n 🚀 Sending data to testomat.io\n');
-      const req = request(`${URL.trim()}/api/load?api_key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(data),
-        },
-      }, (resp) => {
-        // The whole response has been received. Print out the result.
-        let message = '';
-
-        resp.on('end', () => {
-          if (resp.statusCode !== 200) {
-            console.log(' ✖️ ', message);
-          } else {
-            console.log(' 🎉 Data sent to Testomat.io');
-          }
+  send(opts = {}) {
+    return new Promise((resolve, reject) => {
+      if (this.apiKey) {
+        const data = JSON.stringify({
+          ...opts, tests: this.tests, files: this.files, framework: this.getFramework(), language: 'gherkin',
         });
 
-        resp.on('data', (chunk) => {
-          message += chunk.toString();
+        console.log('\n 🚀 Sending data to testomat.io\n');
+        const req = request(`${URL.trim()}/api/load?api_key=${this.apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data),
+          },
+        }, (resp) => {
+          // The whole response has been received. Print out the result.
+          let message = '';
+
+          resp.on('end', () => {
+            if (resp.statusCode >= 400) {
+              console.log(' ✖️ ', message);
+            } else {
+              console.log(' 🎉 Data sent to Testomat.io');
+            }
+            resolve();
+          });
+
+          resp.on('data', (chunk) => {
+            message += chunk.toString();
+          });
+
+          resp.on('aborted', () => {
+            console.log(' ✖️ Data was not sent to Testomat.io');
+            reject(new Error('aborted'));
+          });
         });
 
-        resp.on('aborted', () => {
-          console.log(' ✖️ Data was not sent to Testomat.io');
+        req.on('error', err => {
+          console.log(' ✖️  Error: Server cannot be reached');
+          reject(err);
         });
-      });
 
-      req.on('error', () => {
-        console.log(' ✖️  Error: Server cannot be reached');
-      });
-
-      req.write(data);
-      req.end();
-    }
+        req.write(data);
+        req.end();
+      }
+    });
   }
 }
 

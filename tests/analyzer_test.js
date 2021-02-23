@@ -14,7 +14,7 @@ describe('Analyzer', () => {
     expect(features.length).equal(2);
     expect(featureTitles).to.include('Google search');
     expect(featureTitles).to.include('Business rules');
-    expect(scenarios.length).equal(5);
+    expect(scenarios.length).equal(7);
   });
 
   it('Should not include "And" or "But" in steps', async () => {
@@ -51,5 +51,4 @@ describe('Analyzer', () => {
     const features = await analyse('**/empty.feature', path.join(__dirname, '..', 'example'));
     expect(features[0].error).not.equal(undefined);
   });
-
 });
