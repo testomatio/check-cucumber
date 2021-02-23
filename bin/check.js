@@ -21,6 +21,7 @@ program
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
   .option('--clean-ids', 'Remove testomatio ids from test and suite')
   .option('--unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
+  .option('--no-detached', 'Don\t mark all unmatched tests as detached')
   .action(async (filesArg, opts) => {
     const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd());
     if (opts.cleanIds || opts.unsafeCleanIds) {
@@ -48,8 +49,12 @@ program
           } = scenario;
           files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
           if (name) {
+            let fileName = file;
+            if (process.env.TESTOMATIO_PREPEND_DIR) {
+              fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
+            }
             tests.push({
-              name, suites: [suite.feature], description, code, file, steps,
+              name, suites: [suite.feature], description, code, file: fileName, steps,
             });
           } else {
             scenarioSkipped += 1;
@@ -71,7 +76,7 @@ program
           console.log(chalk.red(error));
         }
       }
-      const resp = reporter.send({ sync: opts.sync || opts.updateIds });
+      const resp = reporter.send({ sync: opts.sync || opts.updateIds, 'no-detach': !opts.detached });
       if (opts.sync) {
         console.log('    Wait for Testomatio to synchronize tests...');
         await resp;
