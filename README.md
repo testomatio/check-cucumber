@@ -15,7 +15,7 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
 ### CLI Options:
 
 - `-d, --dir` - Directory of the project
-- `-c, --codeceptjs` - If it is codecept project use this option
+- `-c, --codeceptjs` - If it is codeceptjs project use this option
 
 **Note :** Running this will create Suites with folder and file name as sub suites.
 
@@ -63,12 +63,16 @@ Please note, that this will take a long time on a large codebase.
 If you want to import the synced project as new project, you have to clean the test ids. To clean the project use `--clean-ids`
 
 ```
-TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --update-ids
+TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --clean-ids
 ```
 
 TESTOMATIO is API key for old project.
 
-**Note:** If you don't have access to the old project you can still clean the project using `--unsafe-clean-ids`. This will clear the IDs that match the regex `@T****`. So if you have a tag like `@Test` this may also be removed. If you use this option make sure if all the test titles a proper before committing the tests in GIT.
+**Note:** If you don't have access to the old project you can still clean the project using `--unsafe-clean-ids`. This will clear the IDs that match the regex `@T****`. So if you have a tag like `@Test` this may also be removed. If you use this option make sure if all the test titles a proper before committing the tests in GIT:
+
+```
+TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --unsafe-clean-ids
+```
 
 ### Import Into a Specific Suite
 
