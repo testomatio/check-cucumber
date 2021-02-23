@@ -85,7 +85,7 @@ const parseFile = file => new Promise((resolve, reject) => {
           console.log('= ', data[1].gherkinDocument.feature.name);
           featureData.feature = getTitle(data[1].gherkinDocument.feature);
           if (!featureData.feature) {
-            console.log(chalk.red(`Title for feature is empty, skipping`));
+            console.log(chalk.red('Title for feature is empty, skipping'));
             featureData.error = `${fileName} : Empty feature`;
           }
           featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
