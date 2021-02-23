@@ -6,32 +6,34 @@ const fs = require('fs');
 const path = require('path');
 const analyze = require('../analyzer');
 const Reporter = require('../reporter');
-const { updateFiles } = require('../util');
+const { updateFiles, cleanFiles } = require('../util');
 
-const version = JSON.parse(fs.readFileSync(path.join(__dirname,'../package.json')).toString()).version;
+const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')).toString());
 
-console.log(chalk.cyan.bold(' 🤩 Cucumber checker by Testomat.io v'+version));
+console.log(chalk.cyan.bold(` 🤩 Cucumber checker by Testomat.io v${version}`));
 const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env.TESTOMATIO || '';
 
 program
   .arguments('<files>')
   .option('-d, --dir <dir>', 'Test directory')
   .option('-c, --codeceptjs', 'Is codeceptJS project')
+  .option('--sync', 'import tests to testomatio and wait for completion')
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
+  .option('--clean-ids', 'Remove testomatio ids from test and suite')
+  .option('--unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
   .action(async (filesArg, opts) => {
     const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd());
-    if (opts.updateIds) {
-      console.log('Update test files called');
+    if (opts.cleanIds || opts.unsafeCleanIds) {
+      let idMap = {};
       if (apiKey) {
         const reporter = new Reporter(apiKey.trim(), opts.codeceptjs);
-        reporter.getIds().then(idMap => {
-          updateFiles(features, idMap, opts.dir || process.cwd());
-          // util.updateFiles(analyzer.rawTests, idMap, opts.dir || process.cwd())
-        });
-      } else {
+        idMap = await reporter.getIds();
+      } else if (opts.cleanIds) {
         console.log(' ✖️  API key not provided');
+        return;
       }
-      console.log('Files updated');
+      const files = cleanFiles(features, idMap, opts.dir || process.cwd(), opts.unsafeCleanIds);
+      console.log(`    ${files.length} files updated.`);
       return;
     }
     let scenarioSkipped = 0;
@@ -69,7 +71,23 @@ program
           console.log(chalk.red(error));
         }
       }
-      reporter.send();
+      const resp = reporter.send({ sync: opts.sync || opts.updateIds });
+      if (opts.sync) {
+        console.log('    Wait for Testomatio to synchronize tests...');
+        await resp;
+      }
+      if (opts.updateIds) {
+        await resp;
+        console.log('Update test files called');
+        if (apiKey) {
+          reporter.getIds().then(idMap => {
+            const updatedFiles = updateFiles(features, idMap, opts.dir || process.cwd());
+            console.log(`${updatedFiles.length} Files updated`);
+          });
+        } else {
+          console.log(' ✖️  API key not provided');
+        }
+      }
     } else {
       console.log('Can\'t find any tests in this folder');
       console.log('Change file pattern or directory to scan to find test files:\n\nUsage: npx check-cucumber -d[directory]');
