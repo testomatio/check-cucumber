@@ -60,7 +60,18 @@ Please note, that this will take a long time on a large codebase.
 
 ## Clean Test IDs
 
-If you want to import the synced project as new project, you have to clean the test ids. To clean the project use `--clean-ids`
+If you want to import the synced project as new project, you have to clean the test ids.
+To clean up test ids without connecting to Testomatio project use `--purge` option:
+
+```
+npx check-cucumber -d example/cucumber --purge
+```
+
+This method may be unsafe, as it cleans all `@S*` and `@T*` tags from tests and suites. So if you have a tag like `@Test1234` this may also be removed. If you use this option make sure if all the test titles a proper before committing the tests in GIT.
+
+> **Note:** An alias of `--purge` option is `--unsafe-clean-ids`.
+
+To clean only test ids set from a specific project use `--clean-ids` option instead:
 
 ```
 TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --clean-ids
@@ -68,11 +79,25 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --clean-ids
 
 TESTOMATIO is API key for old project.
 
-**Note:** If you don't have access to the old project you can still clean the project using `--unsafe-clean-ids`. This will clear the IDs that match the regex `@T****`. So if you have a tag like `@Test` this may also be removed. If you use this option make sure if all the test titles a proper before committing the tests in GIT:
+### Import Into a Branch
+
+Tests can be imported into a specific branch if `TESTOMATIO_BRANCH` parameter is used.
+Branch is matched by its id. If branch was not found, it will be created.
 
 ```
-TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --unsafe-clean-ids
+TESTOMATIO_BRANCH="dev" TESTOMATIO=1111111 npx check-tests CodeceptJS "**/*{.,_}{test,spec}.js"
 ```
+
+### Keep Structure of Source Code
+
+When tests in source code have IDs assigned and those tests are imported, Testomat.io uses current structure in a project to put the tests in. If folders in source code doesn't match folders in Testomat.io project, existing structure in source code will be ignored. To force using the structure from the source code, use `--keep-structure` flag on import:
+
+```
+TESTOMATIO=1111111 npx check-tests CodeceptJS "**/*{.,_}{test,spec}.js" --keep-structure
+```
+
+> This may be helpful when you want to align current project with the source code and use the source code as the source of truth for tests.
+
 
 ### Import Into a Specific Suite
 

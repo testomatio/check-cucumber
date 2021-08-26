@@ -8,10 +8,18 @@ const analyze = require('../analyzer');
 const Reporter = require('../reporter');
 const { updateFiles, cleanFiles } = require('../util');
 
+function checkPattern(pattern) {
+  pattern = pattern.trim(); // eslint-disable-line
+  if (!pattern) return true;
+  if (pattern === '.') return true;
+  return pattern.includes('*');
+}
+
 const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')).toString());
 
 console.log(chalk.cyan.bold(` 🤩 Cucumber checker by Testomat.io v${version}`));
 const apiKey = process.env['INPUT_TESTOMATIO-KEY'] || process.env.TESTOMATIO || '';
+const branch = process.env.TESTOMATIO_BRANCH;
 
 program
   .arguments('<files>')
@@ -21,8 +29,10 @@ program
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
   .option('--clean-ids', 'Remove testomatio ids from test and suite')
   .option('--unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
+  .option('--keep-structure', 'Prefer structure of source code over structure in Testomat.io')
   .option('--no-detached', 'Don\t mark all unmatched tests as detached')
   .action(async (filesArg, opts) => {
+    const isPattern = checkPattern(filesArg);
     const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd());
     if (opts.cleanIds || opts.unsafeCleanIds) {
       let idMap = {};
@@ -76,7 +86,7 @@ program
           console.log(chalk.red(error));
         }
       }
-      const resp = reporter.send({ sync: opts.sync || opts.updateIds, 'no-detach': !opts.detached });
+      const resp = reporter.send({ branch, sync: opts.sync || opts.updateIds, 'no-detach': !isPattern || !opts.detached, structure: opts.keepStructure });
       if (opts.sync) {
         console.log('    Wait for Testomatio to synchronize tests...');
         await resp;
