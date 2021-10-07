@@ -1,3 +1,8 @@
+# 0.5.1
+
+* Added `--purge` command
+* Fixed cleaning and updating empty feature files
+
 # 0.5.0
 
 * Added `--keep-structure` option to prefer source code structure over the structure in Testomat.io

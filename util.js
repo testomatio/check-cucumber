@@ -27,6 +27,8 @@ const parseSuite = suiteTitle => {
 function updateFiles(features, testomatioMap, workDir) {
   const files = [];
   for (const suite of features) {
+    if (!suite.scenario.length) continue;
+
     let lineInc = 0;
     const featureFile = `${workDir}/${suite.scenario[0].file}`;
     if (testomatioMap.suites[suite.feature] && !suite.feature.includes(testomatioMap.suites[suite.feature])) {
@@ -55,6 +57,8 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
   const suiteIds = testomatioMap.suites ? Object.values(testomatioMap.suites) : [];
   const files = [];
   for (const suite of features) {
+    if (!suite.scenario.length) continue;
+
     const file = `${workDir}/${suite.scenario[0].file}`;
     let fileContent = fs.readFileSync(file, { encoding: 'utf8' });
     const suiteTitle = suite.feature;

@@ -28,7 +28,7 @@ program
   .option('--sync', 'import tests to testomatio and wait for completion')
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
   .option('--clean-ids', 'Remove testomatio ids from test and suite')
-  .option('--unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
+  .option('--purge, --unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
   .option('--keep-structure', 'Prefer structure of source code over structure in Testomat.io')
   .option('--no-detached', 'Don\t mark all unmatched tests as detached')
   .action(async (filesArg, opts) => {
