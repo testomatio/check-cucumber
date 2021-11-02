@@ -27,6 +27,7 @@ const parseSuite = suiteTitle => {
 function updateFiles(features, testomatioMap, workDir) {
   const files = [];
   for (const suite of features) {
+    if (!suite.scenario) continue;
     if (!suite.scenario.length) continue;
 
     let lineInc = 0;

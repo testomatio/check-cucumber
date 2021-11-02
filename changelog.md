@@ -1,3 +1,7 @@
+# 0.5.2
+
+* Fix analyzing empty feature files
+
 # 0.5.1
 
 * Added `--purge` command
