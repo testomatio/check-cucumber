@@ -1,3 +1,7 @@
+# 0.5.4
+
+* Fixed puring in empty feature files
+
 # 0.5.3
 
 - Added `--create` option to create a test or suite by ID when they are not found in a project

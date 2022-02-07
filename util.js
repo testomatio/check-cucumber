@@ -58,6 +58,8 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
   const suiteIds = testomatioMap.suites ? Object.values(testomatioMap.suites) : [];
   const files = [];
   for (const suite of features) {
+    if (!suite) continue;
+    if (!suite.scenario) continue;
     if (!suite.scenario.length) continue;
 
     const file = `${workDir}/${suite.scenario[0].file}`;
