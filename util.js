@@ -45,12 +45,12 @@ function updateFiles(features, testomatioMap, workDir) {
     const featureFile = `${workDir}/${suite.scenario[0].file}`;
     files.push(featureFile);
 
-    const name = getTitle(suite.feature);
-    if (!testomatioMap.suites[name]) continue;
-    if (suite.tags.includes(testomatioMap.suites[name])) continue;
-    if (suite.feature.includes(testomatioMap.suites[name])) continue;
+    const suiteName = getTitle(suite.feature);
+    if (!testomatioMap.suites[suiteName]) continue;
+    if (suite.tags.includes(testomatioMap.suites[suiteName])) continue;
+    if (suite.feature.includes(testomatioMap.suites[suiteName])) continue;
 
-    const id = testomatioMap.suites[name];
+    const id = testomatioMap.suites[suiteName];
     const at = suite.line || 1;
     if (suite.tags.length) {
       const tags = suite.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
@@ -67,7 +67,8 @@ function updateFiles(features, testomatioMap, workDir) {
       if (!testomatioMap.tests[name]) continue;
       if (scenario.tags.includes(testomatioMap.tests[name])) continue;
       if (scenario.name.includes(testomatioMap.tests[name])) continue;
-      const id = testomatioMap.tests[name];
+      let id = testomatioMap.tests[name];
+      if (testomatioMap.tests[`${suiteName}#${name}`]) id = testomatioMap.tests[`${suiteName}#${name}`];
 
       if (scenario.tags.length) {
         const tags = scenario.tags.map(t => '@' + t).filter(t => t !== id).join(' ')

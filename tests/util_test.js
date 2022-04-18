@@ -43,7 +43,8 @@ describe('Utils', () => {
   beforeEach(() => {
     idMap = {
       tests: {
-        'Search testomat in google': '@Ta6f544c0',
+        'Search testomat in google': '@notrelev',
+        'Google search#Search testomat in google': '@Ta6f544c0',
         'Search testomat.io in google': '@T40257bf0',
         'Chat 1': '@T40257bf1',
         'Chat 2': '@T40257bf2',
