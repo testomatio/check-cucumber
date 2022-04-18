@@ -107,6 +107,14 @@ To put all imported tests into a specific suite (folder) pass in `TESTOMATIO_PRE
 TESTOMATIO_PREPEND_DIR="MyTESTS" TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
 ```
 
+### Import Manual BDD Tests From Source Code
+
+If you have manual tests in the repository and want to import them into Testomatio you can use `.manual.feature` extension in the feature file. Tests will be imported as well as automated tests and will be marked as `manual` in Testomatio. For instance:
+
+```
+mark-as-completed.manual.feature
+```
+
 ---
 
 License MIT.
