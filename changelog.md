@@ -1,3 +1,8 @@
+# 0.5.5
+
+* Fixed `--update-ids` to add ids as tags
+* Fixed `--purge` to clean up ids in tags
+
 # 0.5.4
 
 * Fixed puring in empty feature files

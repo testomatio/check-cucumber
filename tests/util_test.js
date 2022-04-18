@@ -58,9 +58,11 @@ describe('Utils', () => {
   });
 
   afterEach(() => {
-    cleanFiles('update_examples');
-    cleanFiles('clean_examples');
-    cleanFiles('unsafe_examples');
+    try {
+      cleanFiles('update_examples');
+      cleanFiles('clean_examples');
+      cleanFiles('unsafe_examples');
+    } catch (err) {}
   });
 
   it('should add suite and test ids', async () => {
