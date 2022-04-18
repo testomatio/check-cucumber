@@ -39,7 +39,7 @@ const getScenarioCode = (source, feature, file) => {
       }
       const steps = [];
       let previousValidStep = '';
-      const scenarioJson = { name: getTitle(scenario), file: fileName };
+      const scenarioJson = { name: scenario.name, file: fileName };
       const start = getLocation(scenario);
       const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
       for (const step of scenario.steps) {
@@ -52,6 +52,7 @@ const getScenarioCode = (source, feature, file) => {
         steps.push({ title: step.text, keyword });
       }
       scenarioJson.line = start;
+      scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
       scenarioJson.code = sourceArray.slice(start, end).join('\n');
       scenarioJson.steps = steps;
       scenarios.push(scenarioJson);
@@ -88,6 +89,8 @@ const parseFile = file => new Promise((resolve, reject) => {
             console.log(chalk.red('Title for feature is empty, skipping'));
             featureData.error = `${fileName} : Empty feature`;
           }
+          featureData.line = getLocation(data[1].gherkinDocument.feature) + 1;
+          featureData.tags = data[1].gherkinDocument.feature.tags.map(t => t.name.slice(1));
           featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         } else {
           featureData.error = `${fileName} : ${data[1].attachment.data}`;

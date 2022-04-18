@@ -26,15 +26,7 @@ const copyDir = (src, dest) => {
   }
 };
 
-const idMap = {
-  tests: {
-    'Search testomat in google': '@T11111',
-    'Search testomat.io in google': '@T22222',
-  },
-  suites: {
-    'Google search': '@S11111',
-  },
-};
+let idMap = {}
 
 const createTestFiles = (folderName) => {
   const targetPath = path.join(__dirname, '..', folderName);
@@ -47,21 +39,79 @@ const cleanFiles = (folderName) => {
 };
 
 describe('Utils', () => {
+
+  beforeEach(() => {
+    idMap = {
+      tests: {
+        'Search testomat in google': '@Ta6f544c0',
+        'Search testomat.io in google': '@T40257bf0',
+        'Chat 1': '@T40257bf1',
+        'Chat 2': '@T40257bf2',
+        'Chat 3': '@T40257bf3',
+      },
+      suites: {
+        'Google search': '@S12345678',
+        'Chat page - Performer status': '@S12345679',
+      },
+    }
+  });
+
+  afterEach(() => {
+    cleanFiles('update_examples');
+    cleanFiles('clean_examples');
+    cleanFiles('unsafe_examples');
+  });
+
   it('should add suite and test ids', async () => {
+
+    createTestFiles('update_examples');
+    const features = await analyse('**/valid*.feature', path.join(__dirname, '..', 'update_examples'));
+    const files = util.updateFiles(features, idMap, path.join(__dirname, '..', 'update_examples'));
+
+    const updatedFeatures = await analyse('**/valid*.feature', path.join(__dirname, '..', 'update_examples'));
+    expect(updatedFeatures[0].error).to.equal(undefined);
+    expect(updatedFeatures[1].error).to.equal(undefined);
+
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'valid_google.feature'), { encoding: 'utf8' });
+    const file2 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'valid_sample.feature'), { encoding: 'utf8' });
+
+    expect(files.length).to.equal(2);
+    expect(file1).to.include('@S12345678');
+    expect(file1).to.include('@Ta6f544c0');
+    expect(file1).to.include('@T40257bf0');
+    expect(file2).not.to.include('@T11111');
+  });
+
+  it('should update tags for suite and test ids', async () => {
+    createTestFiles('update_examples');
+    const features = await analyse('**/tags.feature', path.join(__dirname, '..', 'update_examples'));
+    const files = util.updateFiles(features, idMap, path.join(__dirname, '..', 'update_examples'));
+
+    const updatedFeatures = await analyse('**/tags.feature', path.join(__dirname, '..', 'update_examples'));
+    expect(updatedFeatures[0].error).to.equal(undefined);
+
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'tags.feature'), { encoding: 'utf8' });
+
+    expect(files.length).to.equal(1);
+    expect(file1).to.include('@S12345679');
+    expect(file1).to.include('@T40257bf1');
+    expect(file1).to.include('@T40257bf2');
+    expect(file1).to.include('@T40257bf3');
+  });
+
+  it('should not duplicate add suite and test ids', async () => {
 
     createTestFiles('update_examples');
     const features = await analyse('**/valid*.feature', path.join(__dirname, '..', 'update_examples'));
 
     const files = util.updateFiles(features, idMap, path.join(__dirname, '..', 'update_examples'));
     const file1 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'valid_google.feature'), { encoding: 'utf8' });
-    const file2 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'valid_sample.feature'), { encoding: 'utf8' });
 
     expect(files.length).to.equal(2);
-    expect(file1).to.include('@S11111');
-    expect(file1).to.include('@T11111');
-    expect(file1).to.include('@T22222');
-    expect(file2).not.to.include('@T11111');
-    cleanFiles('update_examples');
+    expect(file1).not.to.include('@S12345678 @S12345678');
+    expect(file1).to.include('@Ta6f544c0');
+    expect(file1).not.to.include('@Ta6f544c0 @Ta6f544c0');
+    expect(file1).to.include('@T40257bf0');
   });
 
   it('should clean suite and test ids safely', async () => {
@@ -81,7 +131,6 @@ describe('Utils', () => {
     expect(file1).not.to.include('@T22222');
     expect(file1).to.include('@Txxxxx');
     //expect(file2).not.to.include('@T22222');
-    cleanFiles('clean_examples');
   });
 
   it('should clean suite and test ids unsafely', async () => {
@@ -91,16 +140,18 @@ describe('Utils', () => {
     util.updateFiles(features, idMap, path.join(__dirname, '..', 'unsafe_examples'));
 
     const updatedFeatures = await analyse('**/valid*.feature', path.join(__dirname, '..', 'unsafe_examples'));
+    expect(updatedFeatures[0].error).to.equal(undefined);
+    expect(updatedFeatures[1].error).to.equal(undefined);
+
     const files = util.cleanFiles(updatedFeatures, {}, path.join(__dirname, '..', 'unsafe_examples'), true);
 
     const file1 = fs.readFileSync(path.join(process.cwd(), 'unsafe_examples', 'features', 'valid_google.feature'), { encoding: 'utf8' });
 
     expect(files.length).to.equal(2);
-    expect(file1).not.to.include('@S11111');
-    expect(file1).not.to.include('@T11111');
-    expect(file1).not.to.include('@T22222');
-    expect(file1).not.to.include('@Txxxxx');
+    expect(file1).not.to.include('@S1233456');
+    expect(file1).not.to.include('@T40257bf0');
+    expect(file1).not.to.include('@T4d7f20ed');
+    expect(file1).not.to.include('@T4d7f20ed');
     //expect(file2).not.to.include('@T22222');
-    cleanFiles('unsafe_examples');
   });
 });

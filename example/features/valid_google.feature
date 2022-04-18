@@ -2,7 +2,6 @@ Feature: Google search
   Search strings in google
 
   Scenario: Search testomat in google
-    For google serach get result
     Given I search testomat in google
     And This should be replaced with Given
     Then I get result of testomat.io

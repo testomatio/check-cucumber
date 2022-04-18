@@ -56,7 +56,7 @@ program
       if (suite.scenario) {
         for (const scenario of suite.scenario) {
           const {
-            name, description, code, file, steps,
+            name, description, code, file, steps, tags,
           } = scenario;
           files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
           if (name) {
@@ -65,7 +65,7 @@ program
               fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
             }
             tests.push({
-              name, suites: [suite.feature], description, code, file: fileName, steps,
+              name, suites: [suite.feature], tags, description, code, file: fileName, steps,
             });
           } else {
             scenarioSkipped += 1;
@@ -101,7 +101,7 @@ program
       }
       if (opts.updateIds) {
         await resp;
-        console.log('Update test files called');
+        console.log('Updating test IDs...');
         if (apiKey) {
           reporter.getIds().then(idMap => {
             const updatedFiles = updateFiles(features, idMap, opts.dir || process.cwd());

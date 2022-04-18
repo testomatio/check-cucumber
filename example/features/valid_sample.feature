@@ -11,9 +11,10 @@ Feature: Business rules
     Given I have a defined step 2
     When I open GitHub 2
 
+  @T01234567
   Scenario Outline: eating
     Given there are <start> cucumbers
-    When I eat <eat> cucumbers
+    When I eat <ea
     Then I should have <left> cucumbers
 
     Examples:
