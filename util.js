@@ -46,18 +46,25 @@ function updateFiles(features, testomatioMap, workDir) {
     files.push(featureFile);
 
     const suiteName = getTitle(suite.feature);
-    if (!testomatioMap.suites[suiteName]) continue;
-    if (suite.tags.includes(testomatioMap.suites[suiteName])) continue;
-    if (suite.feature.includes(testomatioMap.suites[suiteName])) continue;
+    const fileName = suite.scenario[0].file;
 
-    const id = testomatioMap.suites[suiteName];
-    const at = suite.line || 1;
-    if (suite.tags.length) {
-      const tags = suite.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-      insertLineToFile(featureFile, `${tags} ${id}`, { overwrite: true, at });
-    } else {
-      insertLineToFile(featureFile, `${id}`, { at });
-      lineInc = 1;
+    let needsSuiteUpdate = true;
+    if (!testomatioMap.suites[suiteName]) needsSuiteUpdate = false;
+    if (suite.tags.includes(testomatioMap.suites[suiteName])) needsSuiteUpdate = false;
+    if (suite.feature.includes(testomatioMap.suites[suiteName])) needsSuiteUpdate = false;
+
+    if (needsSuiteUpdate) {
+      let id = testomatioMap.suites[suiteName];
+      if (testomatioMap.suites[`${fileName}#${suiteName}`]) id = testomatioMap.suites[`${fileName}#${suiteName}`];
+
+      const at = suite.line || 1;
+      if (suite.tags.length) {
+        const tags = suite.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
+        insertLineToFile(featureFile, `${tags} ${id}`, { overwrite: true, at });
+      } else {
+        insertLineToFile(featureFile, `${id}`, { at });
+        lineInc = 1;
+      }
     }
 
     for (const scenario of suite.scenario) {
@@ -68,7 +75,9 @@ function updateFiles(features, testomatioMap, workDir) {
       if (scenario.tags.includes(testomatioMap.tests[name])) continue;
       if (scenario.name.includes(testomatioMap.tests[name])) continue;
       let id = testomatioMap.tests[name];
+
       if (testomatioMap.tests[`${suiteName}#${name}`]) id = testomatioMap.tests[`${suiteName}#${name}`];
+      if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];
 
       if (scenario.tags.length) {
         const tags = scenario.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
@@ -77,13 +86,7 @@ function updateFiles(features, testomatioMap, workDir) {
         insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`.padStart(spaceCount, ' '), { overwrite: true, at: scenario.line + lineInc });
         lineInc += 1;
       }
-      delete testomatioMap.tests[scenario.name];
     }
-    delete testomatioMap.suites[suite.feature];
-
-    // console.log(testomatioMap);
-
-
   }
 
   return files;

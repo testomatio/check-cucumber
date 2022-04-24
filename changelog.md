@@ -1,3 +1,7 @@
+# 0.5.6
+
+* Fixed working with duplicate scenarios
+
 # 0.5.5
 
 * Fixed `--update-ids` to add ids as tags
