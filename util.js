@@ -2,8 +2,10 @@ const insertLine = require('insert-line');
 const fs = require('fs');
 
 const getSpace = (code) => {
-  const line = code.split('\n')[0];
-  return line.search(/\S/);
+  const lines = code.split('\n');
+  let line = lines[0];
+  if (lines[1] && lines[0].trim().startsWith('@')) line = lines[1];
+  return line.search(/\S|$/);
 };
 
 const getTitle = (name) => {
@@ -81,9 +83,9 @@ function updateFiles(features, testomatioMap, workDir) {
 
       if (scenario.tags.length) {
         const tags = scenario.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-        insertLineToFile(file, `${' '.repeat(spaceCount)}${tags} ${id}`.padStart(spaceCount, ' '), { overwrite: true, at: scenario.line + 1 + lineInc });
+        insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags} ${id}`.trim()), { overwrite: true, at: scenario.line + 1 + lineInc });
       } else {
-        insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`.padStart(spaceCount, ' '), { overwrite: true, at: scenario.line + lineInc });
+        insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`, { overwrite: true, at: scenario.line + lineInc });
         lineInc += 1;
       }
     }

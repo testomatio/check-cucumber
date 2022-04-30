@@ -1,3 +1,7 @@
+# 0.5.7
+
+* Fixed adding extra spacing when updating ids
+
 # 0.5.6
 
 * Fixed working with duplicate scenarios
