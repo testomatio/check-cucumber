@@ -1,3 +1,7 @@
+# 0.5.9
+
+* Fixed purging suite ids in feature files
+
 # 0.5.8
 
 - Added `--no-empty` option to delete empty suites after import

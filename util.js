@@ -112,8 +112,8 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
       suiteIds.forEach(sid => fileContent = fileContent.replace(sid, ''))
       testIds.forEach(tid => fileContent = fileContent.replace(tid, ''))
     } else {
-      fileContent = fileContent.replace(/\s@T([\w\d-]{8})/g, '');
-      fileContent = fileContent.replace(/\s@S([\w\d-]{8})/g, '');
+      fileContent = fileContent.replace(/(^|\s)@T([\w\d-]{8})/g, '');
+      fileContent = fileContent.replace(/(^|\s)@S([\w\d-]{8})/g, '');
     }
 
     files.push(file);
