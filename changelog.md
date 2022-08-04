@@ -1,3 +1,7 @@
+# 0.5.8
+
+- Added `--no-empty` option to delete empty suites after import
+
 # 0.5.7
 
 * Fixed adding extra spacing when updating ids

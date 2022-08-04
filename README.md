@@ -99,6 +99,17 @@ TESTOMATIO=1111111 npx check-tests CodeceptJS "**/*{.,_}{test,spec}.js" --keep-s
 > This may be helpful when you want to align current project with the source code and use the source code as the source of truth for tests.
 
 
+### Delete Empty Suites
+
+If tests were marked with IDs and imported to already created suites in Testomat.io
+newly imported suites may become empty. Use `--no-empty` option to clean them up after import.
+
+```
+TESTOMATIO=1111111 npx check-tests CodeceptJS "**/*{.,_}{test,spec}.js" --no-empty
+```
+
+> This prevents usage --keep-structure option.
+
 ### Import Into a Specific Suite
 
 To put all imported tests into a specific suite (folder) pass in `TESTOMATIO_PREPEND_DIR` environment variable:

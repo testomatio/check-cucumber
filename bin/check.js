@@ -30,6 +30,7 @@ program
   .option('--clean-ids', 'Remove testomatio ids from test and suite')
   .option('--purge, --unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
   .option('--create', 'Create tests and suites for missing IDs')
+  .option('--no-empty', 'Remove empty suites after import')
   .option('--keep-structure', 'Prefer structure of source code over structure in Testomat.io')
   .option('--no-detached', 'Don\t mark all unmatched tests as detached')
   .action(async (filesArg, opts) => {
@@ -90,6 +91,7 @@ program
       const resp = reporter.send({
         branch,
         sync: opts.sync || opts.updateIds,
+        noempty: !opts.empty,
         'no-detach': !isPattern || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,
