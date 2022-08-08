@@ -7,18 +7,19 @@ const path = require('path');
 let workDir;
 const invalidKeys = ['And', 'But'];
 
-const getLocation = ({ feature, scenario, rule }) => {
-  const message = feature || scenario || rule;
+const getLocation = ({ feature, scenario, rule, background }) => {
+  const message = feature || scenario || rule || background;
   if (message.tags && message.tags.length) {
     return message.tags[0].location.line - 1;
   }
   return message.location.line - 1;
 };
 
-const getLocations = ({ feature, scenario, rule }) => {
+const getLocations = ({ feature, scenario, rule, background }) => {
   if (feature) return feature.children.flatMap(getLocations);
-  if (scenario) return [ getLocation({ scenario}) ];
+  if (scenario) return [ getLocation({ scenario }) ];
   if (rule) return [getLocation({ rule }), ...rule.children.flatMap(getLocations)];
+  if (background) return [ getLocation({ background }) ];
   return [];
 };
 
@@ -37,11 +38,20 @@ const getTitle = scenario => {
   return name;
 };
 
-const getScenarioCode = (source, feature, file) => {
+const getScenarioCode = (source, feature, file, {
+  includeFeatureCode,
+  includeRuleCode,
+  includeBackgroundCode,
+}) => {
   const sourceArray = source.split('\n');
   const fileName = path.relative(workDir, file);
   const scenarios = [];
-  const [_, ...endLocations] = [...getLocations({ feature }), sourceArray.length];
+
+  const featureStart = getLocation({ feature });
+  const startLocations = getLocations({ feature });
+  const [featureEnd, ...endLocations] = [...startLocations, sourceArray.length];
+  const context = includeFeatureCode ? sourceArray.slice(featureStart, featureEnd) : [];
+
   let inRule = false;
 
   const handleScenario = (scenario) => {
@@ -53,7 +63,7 @@ const getScenarioCode = (source, feature, file) => {
     const steps = [];
     let previousValidStep = '';
     const scenarioJson = { name: scenario.name, file: fileName };
-    const start = getLocation({ scenario });
+    const start = startLocations.shift();
     const end = endLocations.shift();
     for (const step of scenario.steps) {
       let keyword = step.keyword.trim();
@@ -66,22 +76,40 @@ const getScenarioCode = (source, feature, file) => {
     }
     scenarioJson.line = start;
     scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
-    scenarioJson.code = sourceArray.slice(start, end).join('\n');
+    scenarioJson.code = context.concat(sourceArray.slice(start, end)).join('\n');
     scenarioJson.steps = steps;
     scenarios.push(scenarioJson);
   };
 
   const handleRule = (rule) => {
     console.log(inRule ? '  - ' : ' - ', rule.name);
-    endLocations.shift();
+    const oldContextLength = context.length;
+    const start = startLocations.shift();
+    const end = endLocations.shift();
+
+    if (includeRuleCode) {
+      context.push(...sourceArray.slice(start, end));
+    }
+
     inRule = true;
     rule.children.forEach(handleChild);
     inRule = false;
+
+    context.splice(oldContextLength);
   };
 
-  const handleChild = ({ scenario, rule }) => {
+  const handleBackground = (background) => {
+    const start = startLocations.shift();
+    const end = endLocations.shift();
+    if (includeBackgroundCode) {
+      context.push(...sourceArray.slice(start, end));
+    }
+  };
+
+  const handleChild = ({ scenario, rule, background }) => {
     if (scenario) handleScenario(scenario);
     if (rule) handleRule(rule);
+    if (background) handleBackground(background);
   }
 
   feature.children.forEach(handleChild);
@@ -89,7 +117,7 @@ const getScenarioCode = (source, feature, file) => {
   return scenarios;
 };
 
-const parseFile = file => new Promise((resolve, reject) => {
+const parseFile = (file, scenarioCodeOptions) => new Promise((resolve, reject) => {
   try {
     const options = {
       includeSource: true,
@@ -118,7 +146,7 @@ const parseFile = file => new Promise((resolve, reject) => {
           }
           featureData.line = getLocation({feature: data[1].gherkinDocument.feature}) + 1;
           featureData.tags = data[1].gherkinDocument.feature.tags.map(t => t.name.slice(1));
-          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file, scenarioCodeOptions);
         } else {
           featureData.error = `${fileName} : ${data[1].attachment.data}`;
           console.log(chalk.red(`Wrong format,  So skipping this: ${data[1].attachment.data}`));
@@ -136,8 +164,12 @@ const parseFile = file => new Promise((resolve, reject) => {
  *
  * @param {String} filePattern
  * @param {String} dir
+ * @param {Object} scenarioCodeOptions
+ * @param {boolean} scenarioCodeOptions.includeFeatureCode
+ * @param {boolean} scenarioCodeOptions.includeRuleCode
+ * @param {boolean} scenarioCodeOptions.includeBackgroundCode
  */
-const analyzeFeatureFiles = (filePattern, dir = '.') => {
+const analyzeFeatureFiles = (filePattern, dir = '.', scenarioCodeOptions = {}) => {
   workDir = dir;
 
   console.log('\n 🗄️  Parsing files\n');
@@ -147,7 +179,7 @@ const analyzeFeatureFiles = (filePattern, dir = '.') => {
     const promiseArray = [];
     glob(pattern, (er, files) => {
       for (const file of files) {
-        const data = parseFile(file);
+        const data = parseFile(file, scenarioCodeOptions);
         promiseArray.push(data);
       }
 

@@ -32,10 +32,17 @@ program
   .option('--create', 'Create tests and suites for missing IDs')
   .option('--no-empty', 'Remove empty suites after import')
   .option('--keep-structure', 'Prefer structure of source code over structure in Testomat.io')
-  .option('--no-detached', 'Don\t mark all unmatched tests as detached')
+  .option('--no-detached', 'Don\'t mark all unmatched tests as detached')
+  .option('--include-features', 'Add description of feature to scenario code')
+  .option('--include-rules', 'Add description of parent rule sections to scenario code')
+  .option('--include-backgrounds', 'Add description and steps of relevant background sections to scenario code')
   .action(async (filesArg, opts) => {
     const isPattern = checkPattern(filesArg);
-    const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd());
+    const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd(), {
+      includeFeatureCode: opts.includeFeatures,
+      includeRuleCode: opts.includeRules,
+      includeBackgroundCode: opts.includeBackgrounds,
+    });
     if (opts.cleanIds || opts.unsafeCleanIds) {
       let idMap = {};
       if (apiKey) {
