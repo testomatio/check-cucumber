@@ -1,8 +1,14 @@
 Feature: A feature with multiple rules
   Description of the feature
 
+  Background: 
+    Given all rules have something
+
   Rule: Rule 1
     Description of first rule
+
+    Background: 
+      Given the first rule has something
 
     Scenario: Scenario 1.1
       Description of first scenario
@@ -28,6 +34,9 @@ Feature: A feature with multiple rules
   Rule: Rule 2
     Description of second rule
 
+    Background: 
+      Given the second rule has something
+
     Scenario: Scenario 2.1
       Description of first scenario
 
@@ -50,7 +59,10 @@ Feature: A feature with multiple rules
       Then something happens
 
   Rule: Rule 3
-    Description of thrid rule
+    Description of third rule
+
+    Background: 
+      Given the third rule has something
 
     Scenario: Scenario 3.1
       Description of first scenario
