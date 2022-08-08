@@ -7,7 +7,20 @@ const path = require('path');
 let workDir;
 const invalidKeys = ['And', 'But'];
 
-const getLocation = scenario => (scenario.tags.length ? scenario.tags[0].location.line - 1 : scenario.location.line - 1);
+const getLocation = ({ feature, scenario, rule }) => {
+  const message = feature || scenario || rule;
+  if (message.tags && message.tags.length) {
+    return message.tags[0].location.line - 1;
+  }
+  return message.location.line - 1;
+};
+
+const getLocations = ({ feature, scenario, rule }) => {
+  if (feature) return feature.children.flatMap(getLocations);
+  if (scenario) return [ getLocation({ scenario}) ];
+  if (rule) return [getLocation({ rule }), ...rule.children.flatMap(getLocations)];
+  return [];
+};
 
 const getTitle = scenario => {
   let { name } = scenario;
@@ -28,36 +41,50 @@ const getScenarioCode = (source, feature, file) => {
   const sourceArray = source.split('\n');
   const fileName = path.relative(workDir, file);
   const scenarios = [];
+  const [_, ...endLocations] = [...getLocations({ feature }), sourceArray.length];
+  let inRule = false;
 
-  for (let i = 0; i < feature.children.length; i += 1) {
-    const { scenario } = feature.children[i];
-    if (scenario) {
-      if (!scenario.name) {
-        console.log(chalk.red('Title of scenario cannot be empty, skipping this'));
-      } else {
-        console.log(' - ', scenario.name);
-      }
-      const steps = [];
-      let previousValidStep = '';
-      const scenarioJson = { name: scenario.name, file: fileName };
-      const start = getLocation(scenario);
-      const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
-      for (const step of scenario.steps) {
-        let keyword = step.keyword.trim();
-        if (invalidKeys.includes(keyword)) {
-          keyword = previousValidStep;
-        } else {
-          previousValidStep = keyword;
-        }
-        steps.push({ title: step.text, keyword });
-      }
-      scenarioJson.line = start;
-      scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
-      scenarioJson.code = sourceArray.slice(start, end).join('\n');
-      scenarioJson.steps = steps;
-      scenarios.push(scenarioJson);
+  const handleScenario = (scenario) => {
+    if (!scenario.name) {
+      console.log(chalk.red('Title of scenario cannot be empty, skipping this'));
+    } else {
+      console.log(inRule ? '  - ' : ' - ', scenario.name);
     }
+    const steps = [];
+    let previousValidStep = '';
+    const scenarioJson = { name: scenario.name, file: fileName };
+    const start = getLocation({ scenario });
+    const end = endLocations.shift();
+    for (const step of scenario.steps) {
+      let keyword = step.keyword.trim();
+      if (invalidKeys.includes(keyword)) {
+        keyword = previousValidStep;
+      } else {
+        previousValidStep = keyword;
+      }
+      steps.push({ title: step.text, keyword });
+    }
+    scenarioJson.line = start;
+    scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
+    scenarioJson.code = sourceArray.slice(start, end).join('\n');
+    scenarioJson.steps = steps;
+    scenarios.push(scenarioJson);
+  };
+
+  const handleRule = (rule) => {
+    console.log(inRule ? '  - ' : ' - ', rule.name);
+    endLocations.shift();
+    inRule = true;
+    rule.children.forEach(handleChild);
+    inRule = false;
+  };
+
+  const handleChild = ({ scenario, rule }) => {
+    if (scenario) handleScenario(scenario);
+    if (rule) handleRule(rule);
   }
+
+  feature.children.forEach(handleChild);
 
   return scenarios;
 };
@@ -89,7 +116,7 @@ const parseFile = file => new Promise((resolve, reject) => {
             console.log(chalk.red('Title for feature is empty, skipping'));
             featureData.error = `${fileName} : Empty feature`;
           }
-          featureData.line = getLocation(data[1].gherkinDocument.feature) + 1;
+          featureData.line = getLocation({feature: data[1].gherkinDocument.feature}) + 1;
           featureData.tags = data[1].gherkinDocument.feature.tags.map(t => t.name.slice(1));
           featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
         } else {
