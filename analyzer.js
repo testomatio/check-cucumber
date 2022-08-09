@@ -72,7 +72,7 @@ const getScenarioCode = (source, feature, file) => {
   };
 
   const handleRule = (rule) => {
-    console.log(inRule ? '  - ' : ' - ', rule.name);
+    console.log(' - ', rule.name);
     endLocations.shift();
     inRule = true;
     rule.children.forEach(handleChild);
