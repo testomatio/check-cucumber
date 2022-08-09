@@ -80,7 +80,7 @@ const getScenarioCode = (source, feature, file, {
   };
 
   const handleRule = (rule) => {
-    console.log(inRule ? '  - ' : ' - ', rule.name);
+    console.log(' - ', rule.name);
     const oldContextLength = context.length;
     const start = startLocations.shift();
     const end = endLocations.shift();
