@@ -7,8 +7,7 @@ const path = require('path');
 let workDir;
 const invalidKeys = ['And', 'But'];
 
-const getLocation = ({ feature, scenario, rule, background }) => {
-  const message = feature || scenario || rule || background;
+const getLocation = (message) => {
   if (message.tags && message.tags.length) {
     return message.tags[0].location.line - 1;
   }
@@ -16,10 +15,10 @@ const getLocation = ({ feature, scenario, rule, background }) => {
 };
 
 const getLocations = ({ feature, scenario, rule, background }) => {
-  if (feature) return feature.children.flatMap(getLocations);
-  if (scenario) return [ getLocation({ scenario }) ];
-  if (rule) return [getLocation({ rule }), ...rule.children.flatMap(getLocations)];
-  if (background) return [ getLocation({ background }) ];
+  if (feature) return [getLocation(feature), ...feature.children.flatMap(getLocations) ];
+  if (scenario) return [ getLocation(scenario) ];
+  if (rule) return [getLocation(rule), ...rule.children.flatMap(getLocations)];
+  if (background) return [ getLocation(background) ];
   return [];
 };
 
@@ -47,8 +46,7 @@ const getScenarioCode = (source, feature, file, {
   const fileName = path.relative(workDir, file);
   const scenarios = [];
 
-  const featureStart = getLocation({ feature });
-  const startLocations = getLocations({ feature });
+  const [featureStart, ...startLocations] = getLocations({ feature });
   const [featureEnd, ...endLocations] = [...startLocations, sourceArray.length];
   const context = includeFeatureCode ? sourceArray.slice(featureStart, featureEnd) : [];
 
@@ -144,7 +142,7 @@ const parseFile = (file, scenarioCodeOptions) => new Promise((resolve, reject) =
             console.log(chalk.red('Title for feature is empty, skipping'));
             featureData.error = `${fileName} : Empty feature`;
           }
-          featureData.line = getLocation({feature: data[1].gherkinDocument.feature}) + 1;
+          featureData.line = getLocation(data[1].gherkinDocument.feature) + 1;
           featureData.tags = data[1].gherkinDocument.feature.tags.map(t => t.name.slice(1));
           featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file, scenarioCodeOptions);
         } else {
