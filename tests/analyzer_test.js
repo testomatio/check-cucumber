@@ -72,4 +72,17 @@ describe('Analyzer', () => {
     expect(scenariosTitles).to.include('Scenario 3.3');
     expect(scenarios.length).equal(9);
   });
+  it('Should extract the code of scenarios in rules', async () => {
+    const features = await analyse('**/rules.feature', path.join(__dirname, '..', 'example'));
+    const scenarios = features.reduce((acc, feature) => {
+      acc.push(...feature.scenario);
+      return acc;
+    }, []);
+
+    for (let scenario of scenarios) {
+      expect(scenario.code).to.include("Scenario");
+      expect(scenario.code).to.not.include("Rule");
+      expect(scenario.code.split('\n').length).to.equal(7);
+    }
+  });
 });
