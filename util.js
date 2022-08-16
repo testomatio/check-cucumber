@@ -1,3 +1,4 @@
+const chalk = require("chalk");
 const insertLine = require('insert-line');
 const fs = require('fs');
 
@@ -123,7 +124,40 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
   }
   return files;
 }
+
+function checkFiles(features, workDir) {
+  const checkedFiles = [];
+  const suitesWithoutIds = [];
+  const testsWithoutIds = [];
+  for (const suite of features) {
+    if (!suite.scenario) continue;
+    if (!suite.scenario.length) continue;
+
+    const featureFile = `${workDir}/${suite.scenario[0].file}`;
+    checkedFiles.push(featureFile);
+
+    const suiteTags = suite.tags.map(tag => `@${tag}`);
+    const suiteIdTag = suiteTags.find(parseSuite);
+
+    if (!suiteIdTag) {
+      suitesWithoutIds.push(suite.feature);
+    }
+
+    for (const scenario of suite.scenario) {
+      const scenarioTags = scenario.tags.map(tag => `@${tag}`);
+      const scenarioIdTag = scenarioTags.find(parseTest);
+
+      if (!scenarioIdTag) {
+        testsWithoutIds.push(scenario.name);
+      }
+    }
+  }
+
+  return { checkedFiles, suitesWithoutIds, testsWithoutIds };
+}
+
 module.exports = {
   updateFiles,
   cleanFiles,
+  checkFiles,
 };
