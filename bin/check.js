@@ -101,6 +101,7 @@ program
           console.log(
             "    Use the `--update-ids` flag to update the files.\n"
           );
+          process.exit(1);
         }
       } else {
         const resp = reporter.send({
