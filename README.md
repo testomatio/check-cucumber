@@ -81,7 +81,7 @@ TESTOMATIO is API key for old project.
 
 ### Check IDs
 
-To check where all scenarios and features have Testomatio IDs run this command with `--check-ids` option.
+To check whether all scenarios and features have Testomatio IDs run this command with `--check-ids` option.
 
 ```
 TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --check-ids
