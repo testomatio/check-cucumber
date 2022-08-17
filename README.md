@@ -79,6 +79,17 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --clean-ids
 
 TESTOMATIO is API key for old project.
 
+### Check IDs
+
+To check where all scenarios and features have Testomatio IDs run this command with `--check-ids` option.
+
+```
+TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --check-ids
+```
+
+If there is a feature or scenario without a Testomatio ID, the command exits with a non-zero status code.
+If all features and scenarios have Testomatio IDs, the command imports them into Testomatio.
+
 ### Import Into a Branch
 
 Tests can be imported into a specific branch if `TESTOMATIO_BRANCH` parameter is used.
