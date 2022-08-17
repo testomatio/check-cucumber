@@ -1,4 +1,3 @@
-const chalk = require("chalk");
 const insertLine = require('insert-line');
 const fs = require('fs');
 
