@@ -37,19 +37,28 @@ const insertLineToFile = (file, line, opts = { at: 1, overwrite: false }) => {
   fs.writeFileSync(file, lines.join("\n"));
 }
 
+const getLine = (file, line) => {
+  const fileContent = fs.readFileSync(file, 'utf8').toString();
+  const lines = fileContent.split(/\r\n|\r|\n/g);
+  return lines[line];  
+}
+
 function updateFiles(features, testomatioMap, workDir) {
   const files = [];
+
+  let hasOtherIds = false;
+
   for (const suite of features) {
     if (!suite.scenario) continue;
     if (!suite.scenario.length) continue;
-
+    
     let lineInc = 0;
     const featureFile = `${workDir}/${suite.scenario[0].file}`;
     files.push(featureFile);
-
+    
     const suiteName = getTitle(suite.feature);
     const fileName = suite.scenario[0].file;
-
+    
     let needsSuiteUpdate = true;
     if (!testomatioMap.suites[suiteName]) needsSuiteUpdate = false;
     if (suite.tags.includes(testomatioMap.suites[suiteName])) needsSuiteUpdate = false;
@@ -58,11 +67,17 @@ function updateFiles(features, testomatioMap, workDir) {
     if (needsSuiteUpdate) {
       let id = testomatioMap.suites[suiteName];
       if (testomatioMap.suites[`${fileName}#${suiteName}`]) id = testomatioMap.suites[`${fileName}#${suiteName}`];
-
+            
       const at = suite.line || 1;
       if (suite.tags.length) {
-        const tags = suite.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-        insertLineToFile(featureFile, `${tags} ${id}`, { overwrite: true, at });
+        const hasId = suite.tags.map(t => '@' + t).find(t => t === id);
+        if (hasId) continue;
+        if (suite.tags.find(t => t.match(/@S([\w\d-]{8})/))) {
+          hasOtherIds = true;
+          continue;
+        }
+        const tags = getLine(featureFile, at - 1).split(' ').filter(v => v.startsWith('@'))
+        insertLineToFile(featureFile, `${tags.join(' ')} ${id}`, { overwrite: true, at });
       } else {
         insertLineToFile(featureFile, `${id}`, { at });
         lineInc = 1;
@@ -82,14 +97,24 @@ function updateFiles(features, testomatioMap, workDir) {
       if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];
 
       if (scenario.tags.length) {
-        const tags = scenario.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-        insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags} ${id}`.trim()), { overwrite: true, at: scenario.line + 1 + lineInc });
+        const hasId = scenario.tags.map(t => '@' + t).find(t => t === id);
+        if (hasId) continue;
+        if (suite.tags.find(t => t.match(/@S([\w\d-]{8})/))) {
+          hasOtherIds = true;
+          continue;
+        }
+        const at = scenario.line + 1 + lineInc;
+        const prevLine = getLine(file, at - 1)
+        const tags = prevLine.split(' ').filter(v => v.startsWith('@'))
+        insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags.join(' ')} ${id}`.trim()), { overwrite: true, at });
       } else {
         insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`, { overwrite: true, at: scenario.line + lineInc });
         lineInc += 1;
       }
     }
   }
+
+  if (hasOtherIds) console.log('WARNING: Some tests have IDs from another project. New IDs were ignored. Clean up old IDs with --clean-ids and re-run this command again.');
 
   return files;
 }

@@ -1,3 +1,8 @@
+# 0.5.10
+
+* Notify on ID duplication
+* Fixed duplicating strings when adding tags with update-ids
+
 # 0.5.9
 
 * Fixed purging suite ids in feature files

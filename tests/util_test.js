@@ -102,6 +102,35 @@ describe('Utils', () => {
     expect(file1).to.include('@T40257bf3');
   });
 
+  it('should update multiline tags for suite and test ids', async () => {
+    createTestFiles('update_examples');
+    const features = await analyse('**/tags2.feature', path.join(__dirname, '..', 'update_examples'));
+    const files = util.updateFiles(features, idMap, path.join(__dirname, '..', 'update_examples'));
+
+    const updatedFeatures = await analyse('**/tags2.feature', path.join(__dirname, '..', 'update_examples'));
+    expect(updatedFeatures[0].error).to.equal(undefined);
+
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'tags2.feature'), { encoding: 'utf8' });
+
+    const tagsToNotDuplicate = ["@feature:chatPage", "@Severity:critical", "@slow", "@important"];
+
+    for (const stringToCheck of tagsToNotDuplicate) {
+      const regex = new RegExp(stringToCheck, 'g');
+      const matches = file1.match(regex) || [];
+      expect(matches).to.have.lengthOf(1, `${stringToCheck} should appear exactly once`);
+    }    
+    const regex = new RegExp('@story:performerStatus', 'g');
+    const matches = file1.match(regex) || [];
+    expect(matches).to.have.lengthOf(3);
+
+    expect(files.length).to.equal(1);
+    expect(file1).to.include('@S12345679');
+    expect(file1).to.include('@T40257bf1');
+    expect(file1).to.include('@T40257bf2');
+    expect(file1).to.include('@T40257bf3');
+  });
+
+
   it('should not duplicate add suite and test ids', async () => {
 
     createTestFiles('update_examples');
@@ -137,7 +166,6 @@ describe('Utils', () => {
   });
 
   it('should clean suite and test ids unsafely', async () => {
-
     createTestFiles('unsafe_examples');
     const features = await analyse('**/valid*.feature', path.join(__dirname, '..', 'unsafe_examples'));
     util.updateFiles(features, idMap, path.join(__dirname, '..', 'unsafe_examples'));
