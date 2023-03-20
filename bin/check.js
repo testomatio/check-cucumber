@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const program = require('commander');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -92,7 +93,7 @@ program
         branch,
         sync: opts.sync || opts.updateIds,
         noempty: !opts.empty,
-        'no-detach': !isPattern || !opts.detached,
+        'no-detach': process.env.TESTOMATIO_NO_DETACHED || !isPattern || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,
       });

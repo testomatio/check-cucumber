@@ -48,6 +48,10 @@ To disable this behavior and don't mark anything on detached on import use `--no
 TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --no-detached
 ```
 
+This option could also be set via environment variable `TESTOMATIO_NO_DETACHED=1`.
+If you don't want to pass it each time, create .env file in the root dir of your project with this variable set.
+
+
 ## Synchronous Import
 
 By default `check-cucumber` doesn't wait for all tests to be processed. It sends request to Testomatio and exits. To wait for processing to finish use `--sync` option.
