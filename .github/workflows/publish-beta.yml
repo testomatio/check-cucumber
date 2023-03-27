@@ -1,9 +1,9 @@
 name: Publish beta version to npm
 on: 
-  pull_request:
+  # pull_request:
   #   branches:
   #     - master
-  # workflow_dispatch
+  workflow_dispatch
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -15,7 +15,6 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
-      # - run: npm publish --tag beta
-      - run: npm unpublish check-cucumber@0.5.11
+      - run: npm publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
