@@ -93,7 +93,7 @@ program
         branch,
         sync: opts.sync || opts.updateIds,
         noempty: !opts.empty,
-        'no-detach': process.env.TESTOMATIO_NO_DETACHED || !isPattern || !opts.detached,
+        'no-detach': process.env.TESTOMATIO_NO_DETACHED || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,
       });
