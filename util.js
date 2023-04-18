@@ -134,8 +134,16 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
     const suiteId = `@S${parseSuite(suiteTitle)}`;
 
     if (!dangerous) {
-      suiteIds.forEach(sid => fileContent = fileContent.replace(sid, ''))
-      testIds.forEach(tid => fileContent = fileContent.replace(tid, ''))
+      /*
+      Suite and test ids are always added with a new line,
+      therefore when we want to remove ids - the whole line shold be removed.
+      The regex below includes:
+      1. \n? – new line character (if exists)
+      2. [ \t]* - unlimited amount of spaces or tabs
+      3. suite or test id (sid/tid)
+      */
+      suiteIds.forEach(sid => fileContent = fileContent.replace(new RegExp('\n?[ \t]*' + sid), ''))
+      testIds.forEach(tid => fileContent = fileContent.replace(new RegExp('\n?[ \t]*' + tid), ''))
     } else {
       fileContent = fileContent.replace(/(^|\s)@T([\w\d-]{8})/g, '');
       fileContent = fileContent.replace(/(^|\s)@S([\w\d-]{8})/g, '');
