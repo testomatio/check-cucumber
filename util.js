@@ -136,17 +136,17 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
     if (!dangerous) {
       /*
       Suite and test ids are always added with a new line,
-      therefore when we want to remove ids - the whole line shold be removed.
+      therefore, when we want to remove ids - the whole line shold be removed.
       The regex below includes:
-      1. \n? – new line character (if exists)
-      2. [ \t]* - unlimited amount of spaces or tabs
-      3. suite or test id (sid/tid)
+      1. [ \t]* – unlimited amount of spaces or tabs
+      2. suite or test id (sid/tid)
+      2. \\s - new line (or other whitespace characters)
       */
-      suiteIds.forEach(sid => fileContent = fileContent.replace(new RegExp('\n?[ \t]*' + sid), ''))
-      testIds.forEach(tid => fileContent = fileContent.replace(new RegExp('\n?[ \t]*' + tid), ''))
+      suiteIds.forEach(sid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + sid + '\\s'), ''))
+      testIds.forEach(tid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + tid + '\\s'), ''))
     } else {
-      fileContent = fileContent.replace(/(^|\s)@T([\w\d-]{8})/g, '');
-      fileContent = fileContent.replace(/(^|\s)@S([\w\d-]{8})/g, '');
+      fileContent = fileContent.replace(/[ \t]*@S([\w\d-]{8})\s/g, '');
+      fileContent = fileContent.replace(/[ \t]*@T([\w\d-]{8})\s/g, '');
     }
 
     files.push(file);
