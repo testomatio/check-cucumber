@@ -1,3 +1,7 @@
+# 0.5.11
+
+* Added `TESTOMATIO_TITLE_IDS` option to add IDs into Scenario titles
+
 # 0.5.10
 
 * Notify on ID duplication

@@ -69,7 +69,10 @@ function updateFiles(features, testomatioMap, workDir) {
       if (testomatioMap.suites[`${fileName}#${suiteName}`]) id = testomatioMap.suites[`${fileName}#${suiteName}`];
             
       const at = suite.line || 1;
-      if (suite.tags.length) {
+
+      if (process.env.TESTOMATIO_TITLE_IDS) {
+        // ignore suite ids
+      } else if (suite.tags.length) {
         const hasId = suite.tags.map(t => '@' + t).find(t => t === id);
         if (hasId) continue;
         if (suite.tags.find(t => t.match(/@S([\w\d-]{8})/))) {
@@ -94,7 +97,15 @@ function updateFiles(features, testomatioMap, workDir) {
       let id = testomatioMap.tests[name];
 
       if (testomatioMap.tests[`${suiteName}#${name}`]) id = testomatioMap.tests[`${suiteName}#${name}`];
-      if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];
+      if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];      
+
+      if (process.env.TESTOMATIO_TITLE_IDS) {
+        const lineInc = scenario.code.split('\n').findIndex(line => line.trim().startsWith('Scenario'));      
+        const at = scenario.line + lineInc;
+        const scenarioTitle = getLine(featureFile, at);
+        insertLineToFile(file, `${scenarioTitle} ${id}`, { overwrite: true, at: at + 1 });
+        continue;
+      }
 
       if (scenario.tags.length) {
         const hasId = scenario.tags.map(t => '@' + t).find(t => t === id);

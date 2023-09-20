@@ -37,6 +37,8 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --update-ids
 
 Scenarios should already be imported into Testomatio
 
+> If you prever to add Test IDs into scenario titles instead of tags enable `TESTOMATIO_TITLE_IDS=1` environment variable
+
 ### Disable Detached Tests
 
 If a test from a previous import was not found on next import it is marked as "detached".
