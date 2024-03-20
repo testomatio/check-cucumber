@@ -35,7 +35,7 @@ const createTestFiles = (folderName) => {
 
 const cleanFiles = (folderName) => {
   const targetPath = path.join(__dirname, '..', folderName);
-  fs.rmdirSync(targetPath, { recursive: true, force: true });
+  fs.rmSync(targetPath, { recursive: true, force: true });
 };
 
 describe('Utils', () => {
@@ -185,4 +185,41 @@ describe('Utils', () => {
     expect(file1).not.to.include('@T4d7f20ed');
     //expect(file2).not.to.include('@T22222');
   });
+
+  it('should clean suite and test ids with non-standard tags', async () => {
+    createTestFiles('tags_examples');
+    const tagIdMap = {
+      tests: {
+        'Create Todos with BDD': '@T40257bf0',
+        'Create a single todo item': '@T40257bf1',
+        'Create multiple todos': '@T40257bf3',
+      },
+      suites: {
+        'Create Todos with BDD': '@S12345678',
+      },
+    }
+
+    const file0 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    const features = await analyse('**/tags3.feature', path.join(__dirname, '..', 'tags_examples'));
+    util.updateFiles(features, tagIdMap, path.join(__dirname, '..', 'tags_examples'));
+    
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    expect(file1).to.include('@some-tag @priority-example @some_context-drop @T40257bf1');
+    expect(file1).to.include('@some-tag @priority-example @T40257bf3');
+
+
+    const updatedFeatures = await analyse('**/tags3.feature', path.join(__dirname, '..', 'tags_examples'));
+    const files = util.cleanFiles(updatedFeatures, {}, path.join(__dirname, '..', 'tags_examples'), true);
+    
+    const file2 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    expect(file2).to.not.include('@T40257bf1');
+    expect(file2).to.include('@some-tag @priority-example @some_context-drop');
+
+    expect(file2.trim()).to.eql(file0.trim())
+    //expect(file2).not.to.include('@T22222');
+  });
+
 });

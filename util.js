@@ -1,6 +1,10 @@
 const insertLine = require('insert-line');
 const fs = require('fs');
 
+const tagRegex = /\@[\w\d\=\-\_\(\)\.\:\&]*[\w\d]/g;
+const suiteRegex = /\@S[\w\d]{8}/g;
+const testRegex = /\@T[\w\d]{8}/g;
+
 const getSpace = (code) => {
   const lines = code.split('\n');
   let line = lines[0];
@@ -9,11 +13,11 @@ const getSpace = (code) => {
 };
 
 const getTitle = (name) => {
-  return name.replace(/@([\w\d\-\(\)\.\,\*:]+)/g, '').trim();
+  return name.replace(tagRegex, '').trim();
 }
 
 const parseTest = testTitle => {
-  const captures = testTitle.match(/@T([\w\d]+)/);
+  const captures = testTitle.match(testRegex);
   if (captures) {
     return captures[1];
   }
@@ -22,7 +26,7 @@ const parseTest = testTitle => {
 };
 
 const parseSuite = suiteTitle => {
-  const captures = suiteTitle.match(/@S([\w\d]+)/);
+  const captures = suiteTitle.match(suiteRegex);
   if (captures) {
     return captures[1];
   }
@@ -75,11 +79,11 @@ function updateFiles(features, testomatioMap, workDir) {
       } else if (suite.tags.length) {
         const hasId = suite.tags.map(t => '@' + t).find(t => t === id);
         if (hasId) continue;
-        if (suite.tags.find(t => t.match(/@S([\w\d-]{8})/))) {
+        if (suite.tags.find(t => t.match(suiteRegex))) {
           hasOtherIds = true;
           continue;
         }
-        const tags = getLine(featureFile, at - 1).split(' ').filter(v => v.startsWith('@'))
+        const tags = getLine(featureFile, at - 1).split(' ').filter(v => v.match(tagRegex))
         insertLineToFile(featureFile, `${tags.join(' ')} ${id}`, { overwrite: true, at });
       } else {
         insertLineToFile(featureFile, `${id}`, { at });
@@ -110,13 +114,13 @@ function updateFiles(features, testomatioMap, workDir) {
       if (scenario.tags.length) {
         const hasId = scenario.tags.map(t => '@' + t).find(t => t === id);
         if (hasId) continue;
-        if (suite.tags.find(t => t.match(/@S([\w\d-]{8})/))) {
+        if (suite.tags.find(t => t.match(suiteRegex))) {
           hasOtherIds = true;
           continue;
         }
         const at = scenario.line + 1 + lineInc;
         const prevLine = getLine(file, at - 1)
-        const tags = prevLine.split(' ').filter(v => v.startsWith('@'))
+        const tags = prevLine.split(' ').filter(v => v.match(tagRegex))
         insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags.join(' ')} ${id}`.trim()), { overwrite: true, at });
       } else {
         insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`, { overwrite: true, at: scenario.line + lineInc });
@@ -156,9 +160,11 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
       suiteIds.forEach(sid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + sid + '\\s'), ''))
       testIds.forEach(tid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + tid + '\\s'), ''))
     } else {
-      fileContent = fileContent.replace(/[ \t]*@S([\w\d-]{8})\s/g, '');
-      fileContent = fileContent.replace(/[ \t]*@T([\w\d-]{8})\s/g, '');
+      fileContent = fileContent.replace(suiteRegex, '');
+      fileContent = fileContent.replace(testRegex, '');
     }
+
+    fileContent = fileContent.split('\n').map(l => l.replace(/\s+$/, '')).join('\n');
 
     files.push(file);
     fs.writeFileSync(file, fileContent, (err) => {
