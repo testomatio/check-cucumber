@@ -1,3 +1,7 @@
+# 0.5.18
+
+* Fixed using non-standard tags for scenarios and features
+
 # 0.5.11
 
 * Added `TESTOMATIO_TITLE_IDS` option to add IDs into Scenario titles
