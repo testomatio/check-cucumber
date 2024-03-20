@@ -62,6 +62,7 @@ describe('Utils', () => {
       cleanFiles('update_examples');
       cleanFiles('clean_examples');
       cleanFiles('unsafe_examples');
+      cleanFiles('tags_examples');
     } catch (err) {}
   });
 
