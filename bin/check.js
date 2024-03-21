@@ -106,7 +106,7 @@ program
         await resp;
         console.log('Updating test IDs...');
         if (apiKey) {
-          reporter.getIds().then(idMap => {
+          reporter.getIds({ branch }).then(idMap => {
             const updatedFiles = updateFiles(features, idMap, opts.dir || process.cwd());
             console.log(`${updatedFiles.length} Files updated`);
           });

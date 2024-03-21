@@ -1,3 +1,7 @@
+# 0.5.19 
+
+* Added importing to branch
+
 # 0.5.18
 
 * Fixed using non-standard tags for scenarios and features
