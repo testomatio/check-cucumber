@@ -7,7 +7,20 @@ const path = require('path');
 let workDir;
 const invalidKeys = ['And', 'But'];
 
-const getLocation = scenario => (scenario.tags.length ? scenario.tags[0].location.line - 1 : scenario.location.line - 1);
+const getLocation = (message) => {
+  if (message.tags && message.tags.length) {
+    return message.tags[0].location.line - 1;
+  }
+  return message.location.line - 1;
+};
+
+const getLocations = ({ feature, scenario, rule, background }) => {
+  if (feature) return [getLocation(feature), ...feature.children.flatMap(getLocations) ];
+  if (scenario) return [ getLocation(scenario) ];
+  if (rule) return [getLocation(rule), ...rule.children.flatMap(getLocations)];
+  if (background) return [ getLocation(background) ];
+  return [];
+};
 
 const getTitle = scenario => {
   let { name } = scenario;
@@ -24,45 +37,85 @@ const getTitle = scenario => {
   return name;
 };
 
-const getScenarioCode = (source, feature, file) => {
+const getScenarioCode = (source, feature, file, {
+  includeFeatureCode,
+  includeRuleCode,
+  includeBackgroundCode,
+}) => {
   const sourceArray = source.split('\n');
   const fileName = path.relative(workDir, file);
   const scenarios = [];
 
-  for (let i = 0; i < feature.children.length; i += 1) {
-    const { scenario } = feature.children[i];
-    if (scenario) {
-      if (!scenario.name) {
-        console.log(chalk.red('Title of scenario cannot be empty, skipping this'));
-      } else {
-        console.log(' - ', scenario.name);
-      }
-      const steps = [];
-      let previousValidStep = '';
-      const scenarioJson = { name: scenario.name, file: fileName };
-      const start = getLocation(scenario);
-      const end = ((i === feature.children.length - 1) ? sourceArray.length : getLocation(feature.children[i + 1].scenario));
-      for (const step of scenario.steps) {
-        let keyword = step.keyword.trim();
-        if (invalidKeys.includes(keyword)) {
-          keyword = previousValidStep;
-        } else {
-          previousValidStep = keyword;
-        }
-        steps.push({ title: step.text, keyword });
-      }
-      scenarioJson.line = start;
-      scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
-      scenarioJson.code = sourceArray.slice(start, end).join('\n');
-      scenarioJson.steps = steps;
-      scenarios.push(scenarioJson);
+  const [featureStart, ...startLocations] = getLocations({ feature });
+  const [featureEnd, ...endLocations] = [...startLocations, sourceArray.length];
+  const context = includeFeatureCode ? sourceArray.slice(featureStart, featureEnd) : [];
+
+  let inRule = false;
+
+  const handleScenario = (scenario) => {
+    if (!scenario.name) {
+      console.log(chalk.red('Title of scenario cannot be empty, skipping this'));
+    } else {
+      console.log(inRule ? '  - ' : ' - ', scenario.name);
     }
+    const steps = [];
+    let previousValidStep = '';
+    const scenarioJson = { name: scenario.name, file: fileName };
+    const start = startLocations.shift();
+    const end = endLocations.shift();
+    for (const step of scenario.steps) {
+      let keyword = step.keyword.trim();
+      if (invalidKeys.includes(keyword)) {
+        keyword = previousValidStep;
+      } else {
+        previousValidStep = keyword;
+      }
+      steps.push({ title: step.text, keyword });
+    }
+    scenarioJson.line = start;
+    scenarioJson.tags = scenario.tags.map(t => t.name.slice(1));
+    scenarioJson.code = context.concat(sourceArray.slice(start, end)).join('\n');
+    scenarioJson.steps = steps;
+    scenarios.push(scenarioJson);
+  };
+
+  const handleRule = (rule) => {
+    console.log(' - ', rule.name);
+    const oldContextLength = context.length;
+    const start = startLocations.shift();
+    const end = endLocations.shift();
+
+    if (includeRuleCode) {
+      context.push(...sourceArray.slice(start, end));
+    }
+
+    inRule = true;
+    rule.children.forEach(handleChild);
+    inRule = false;
+
+    context.splice(oldContextLength);
+  };
+
+  const handleBackground = (background) => {
+    const start = startLocations.shift();
+    const end = endLocations.shift();
+    if (includeBackgroundCode) {
+      context.push(...sourceArray.slice(start, end));
+    }
+  };
+
+  const handleChild = ({ scenario, rule, background }) => {
+    if (scenario) handleScenario(scenario);
+    if (rule) handleRule(rule);
+    if (background) handleBackground(background);
   }
+
+  feature.children.forEach(handleChild);
 
   return scenarios;
 };
 
-const parseFile = file => new Promise((resolve, reject) => {
+const parseFile = (file, scenarioCodeOptions) => new Promise((resolve, reject) => {
   try {
     const options = {
       includeSource: true,
@@ -91,7 +144,7 @@ const parseFile = file => new Promise((resolve, reject) => {
           }
           featureData.line = getLocation(data[1].gherkinDocument.feature) + 1;
           featureData.tags = data[1].gherkinDocument.feature.tags.map(t => t.name.slice(1));
-          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file);
+          featureData.scenario = getScenarioCode(data[0].source.data, data[1].gherkinDocument.feature, file, scenarioCodeOptions);
         } else {
           featureData.error = `${fileName} : ${data[1].attachment.data}`;
           console.log(chalk.red(`Wrong format,  So skipping this: ${data[1].attachment.data}`));
@@ -109,8 +162,12 @@ const parseFile = file => new Promise((resolve, reject) => {
  *
  * @param {String} filePattern
  * @param {String} dir
+ * @param {Object} scenarioCodeOptions
+ * @param {boolean} scenarioCodeOptions.includeFeatureCode
+ * @param {boolean} scenarioCodeOptions.includeRuleCode
+ * @param {boolean} scenarioCodeOptions.includeBackgroundCode
  */
-const analyzeFeatureFiles = (filePattern, dir = '.') => {
+const analyzeFeatureFiles = (filePattern, dir = '.', scenarioCodeOptions = {}) => {
   workDir = dir;
 
   console.log('\n 🗄️  Parsing files\n');
@@ -120,7 +177,7 @@ const analyzeFeatureFiles = (filePattern, dir = '.') => {
     const promiseArray = [];
     glob(pattern, (er, files) => {
       for (const file of files) {
-        const data = parseFile(file);
+        const data = parseFile(file, scenarioCodeOptions);
         promiseArray.push(data);
       }
 
