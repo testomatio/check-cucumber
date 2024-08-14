@@ -19,9 +19,11 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
 
 **Note :** Running this will create Suites with folder and file name as sub suites.
 
-To change host of endpoint for receiving data, and set it to other than app.testomat.io use TESTOMATIO_URL environment variable:
+To change the host for receiving data, if you use Testomat.io from domain other than `app.testomat.io` set `TESTOMATIO_URL` environment variable:
 
-TESTOMATIO_URL=https://beta.testomat.io
+```
+TESTOMATIO_URL=https://other-instance-of.testomat.io
+```
 
 ### Sample Output
 
