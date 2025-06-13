@@ -2,6 +2,8 @@
 
 CLI tool that checks Gherkin formatted feature files and imports them into Testomatio.
 
+> 📜 For detailed CLI options and environment variables, see [cli.md](./cli.md)
+
 ## Cli
 
 To import tests into Testomatio run `check-cucumber` via npx:
@@ -131,11 +133,25 @@ TESTOMATIO=1111111 npx check-tests CodeceptJS "**/*{.,_}{test,spec}.js" --no-emp
 
 ### Import Into a Specific Suite
 
-To put all imported tests into a specific suite (folder) pass in `TESTOMATIO_PREPEND_DIR` environment variable:
+You can import tests into a specific suite using one of these options:
+
+#### Option 1: Import to existing suite by ID
+
+Use `TESTOMATIO_SUITE` to import tests into an existing suite by its ID:
+
+```
+TESTOMATIO_SUITE=@Sa1b2c3d4 TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
+```
+
+#### Option 2: Create new suite folder
+
+Use `TESTOMATIO_PREPEND_DIR` to create a new folder and import all tests into it:
 
 ```
 TESTOMATIO_PREPEND_DIR="MyTESTS" TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
 ```
+
+This creates a new suite folder named "MyTESTS" and imports all tests under it, preserving the original file structure within that folder.
 
 ### Import Manual BDD Tests From Source Code
 
@@ -144,6 +160,10 @@ If you have manual tests in the repository and want to import them into Testomat
 ```
 mark-as-completed.manual.feature
 ```
+
+---
+
+All available options [here](./cli.md)
 
 ---
 
