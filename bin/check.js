@@ -62,17 +62,20 @@ program
           const {
             name, description, code, file, steps, tags,
           } = scenario;
-          files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
           if (name) {
             let fileName = file;
-            if (process.env.TESTOMATIO_PREPEND_DIR) {
-              fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
-            }
             // make file path relative to TESTOMATIO_WORKDIR if provided
             if (process.env.TESTOMATIO_WORKDIR && fileName) {
               const workdir = path.resolve(process.env.TESTOMATIO_WORKDIR);
               const absoluteTestPath = path.resolve(fileName);
               fileName = path.relative(workdir, absoluteTestPath);
+            }
+            if (process.env.TESTOMATIO_PREPEND_DIR) {
+              fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
+            }
+            // Store file content using the final fileName as key for consistency, but avoid duplicate reads
+            if (!files[fileName]) {
+              files[fileName] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
             }
             tests.push({
               name, suites: [suite.feature], tags, description, code, file: fileName, steps,
@@ -104,10 +107,10 @@ program
           features,
           opts.dir || process.cwd()
         );
-        console.log(`${checkedFiles.length} Files checked`);
+        console.log(` ${checkedFiles.length} Files checked`);
         if (suitesWithoutIds.length || testsWithoutIds.length) {
           console.log(
-            `\n ⚠️  ${suitesWithoutIds.length} suites and ${testsWithoutIds.length} tests are missing test IDs!`
+            `\n 🔴 ${suitesWithoutIds.length} suites and ${testsWithoutIds.length} tests are missing test IDs!`
           );
           console.log("    Use the `--update-ids` flag to update the files.\n");
           process.exit(1);
@@ -118,6 +121,7 @@ program
         branch,
         sync: opts.sync || opts.updateIds,
         noempty: !opts.empty,
+        suite: process.env.TESTOMATIO_SUITE,
         'no-detach': process.env.TESTOMATIO_NO_DETACHED || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,

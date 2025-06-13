@@ -19,7 +19,7 @@ const getTitle = (name) => {
 const parseTest = testTitle => {
   const captures = testTitle.match(testRegex);
   if (captures) {
-    return captures[1];
+    return captures[0];
   }
 
   return null;
@@ -28,7 +28,7 @@ const parseTest = testTitle => {
 const parseSuite = suiteTitle => {
   const captures = suiteTitle.match(suiteRegex);
   if (captures) {
-    return captures[1];
+    return captures[0];
   }
 
   return null;
@@ -164,7 +164,15 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
       fileContent = fileContent.replace(testRegex, '');
     }
 
+    // Clean up empty lines and trailing spaces
     fileContent = fileContent.split('\n').map(l => l.replace(/\s+$/, '')).join('\n');
+    
+    // Remove multiple consecutive empty lines and empty lines before keywords
+    fileContent = fileContent
+      .replace(/\n\s*\n\s*\n+/g, '\n\n') // Replace 3+ consecutive empty lines with 2
+      .replace(/^\s*\n+/g, '') // Remove leading empty lines
+      .replace(/\n\s*\n+(\s*)(Feature:)/g, '\n$1$2') // Remove empty lines before Feature while preserving indentation
+      .replace(/^\n+/, ''); // Remove any remaining leading newlines
 
     files.push(file);
     fs.writeFileSync(file, fileContent, (err) => {
