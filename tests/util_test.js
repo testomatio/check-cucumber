@@ -35,7 +35,7 @@ const createTestFiles = (folderName) => {
 
 const cleanFiles = (folderName) => {
   const targetPath = path.join(__dirname, '..', folderName);
-  fs.rmdirSync(targetPath, { recursive: true, force: true });
+  fs.rmSync(targetPath, { recursive: true, force: true });
 };
 
 describe('Utils', () => {
@@ -62,6 +62,7 @@ describe('Utils', () => {
       cleanFiles('update_examples');
       cleanFiles('clean_examples');
       cleanFiles('unsafe_examples');
+      cleanFiles('tags_examples');
     } catch (err) {}
   });
 
@@ -102,6 +103,35 @@ describe('Utils', () => {
     expect(file1).to.include('@T40257bf3');
   });
 
+  it('should update multiline tags for suite and test ids', async () => {
+    createTestFiles('update_examples');
+    const features = await analyse('**/tags2.feature', path.join(__dirname, '..', 'update_examples'));
+    const files = util.updateFiles(features, idMap, path.join(__dirname, '..', 'update_examples'));
+
+    const updatedFeatures = await analyse('**/tags2.feature', path.join(__dirname, '..', 'update_examples'));
+    expect(updatedFeatures[0].error).to.equal(undefined);
+
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'update_examples', 'features', 'tags2.feature'), { encoding: 'utf8' });
+
+    const tagsToNotDuplicate = ["@feature:chatPage", "@Severity:critical", "@slow", "@important"];
+
+    for (const stringToCheck of tagsToNotDuplicate) {
+      const regex = new RegExp(stringToCheck, 'g');
+      const matches = file1.match(regex) || [];
+      expect(matches).to.have.lengthOf(1, `${stringToCheck} should appear exactly once`);
+    }    
+    const regex = new RegExp('@story:performerStatus', 'g');
+    const matches = file1.match(regex) || [];
+    expect(matches).to.have.lengthOf(3);
+
+    expect(files.length).to.equal(1);
+    expect(file1).to.include('@S12345679');
+    expect(file1).to.include('@T40257bf1');
+    expect(file1).to.include('@T40257bf2');
+    expect(file1).to.include('@T40257bf3');
+  });
+
+
   it('should not duplicate add suite and test ids', async () => {
 
     createTestFiles('update_examples');
@@ -137,7 +167,6 @@ describe('Utils', () => {
   });
 
   it('should clean suite and test ids unsafely', async () => {
-
     createTestFiles('unsafe_examples');
     const features = await analyse('**/valid*.feature', path.join(__dirname, '..', 'unsafe_examples'));
     util.updateFiles(features, idMap, path.join(__dirname, '..', 'unsafe_examples'));
@@ -179,4 +208,41 @@ describe('Utils', () => {
       'Search testomat in google'
     ]);
   });
+
+  it('should clean suite and test ids with non-standard tags', async () => {
+    createTestFiles('tags_examples');
+    const tagIdMap = {
+      tests: {
+        'Create Todos with BDD': '@T40257bf0',
+        'Create a single todo item': '@T40257bf1',
+        'Create multiple todos': '@T40257bf3',
+      },
+      suites: {
+        'Create Todos with BDD': '@S12345678',
+      },
+    }
+
+    const file0 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    const features = await analyse('**/tags3.feature', path.join(__dirname, '..', 'tags_examples'));
+    util.updateFiles(features, tagIdMap, path.join(__dirname, '..', 'tags_examples'));
+    
+    const file1 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    expect(file1).to.include('@some-tag @priority-example @some_context-drop @T40257bf1');
+    expect(file1).to.include('@some-tag @priority-example @T40257bf3');
+
+
+    const updatedFeatures = await analyse('**/tags3.feature', path.join(__dirname, '..', 'tags_examples'));
+    const files = util.cleanFiles(updatedFeatures, {}, path.join(__dirname, '..', 'tags_examples'), true);
+    
+    const file2 = fs.readFileSync(path.join(process.cwd(), 'tags_examples', 'features', 'tags3.feature'), { encoding: 'utf8' });
+
+    expect(file2).to.not.include('@T40257bf1');
+    expect(file2).to.include('@some-tag @priority-example @some_context-drop');
+
+    expect(file2.trim()).to.eql(file0.trim())
+    //expect(file2).not.to.include('@T22222');
+  });
+
 });

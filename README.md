@@ -19,9 +19,11 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
 
 **Note :** Running this will create Suites with folder and file name as sub suites.
 
-To change host of endpoint for receiving data, and set it to other than app.testomat.io use TESTOMATIO_URL environment variable:
+To change the host for receiving data, if you use Testomat.io from domain other than `app.testomat.io` set `TESTOMATIO_URL` environment variable:
 
-TESTOMATIO_URL=https://beta.testomat.io
+```
+TESTOMATIO_URL=https://other-instance-of.testomat.io
+```
 
 ### Sample Output
 
@@ -37,6 +39,8 @@ TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --update-ids
 
 Scenarios should already be imported into Testomatio
 
+> If you prever to add Test IDs into scenario titles instead of tags enable `TESTOMATIO_TITLE_IDS=1` environment variable
+
 ### Disable Detached Tests
 
 If a test from a previous import was not found on next import it is marked as "detached".
@@ -47,6 +51,10 @@ To disable this behavior and don't mark anything on detached on import use `--no
 ```
 TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber --no-detached
 ```
+
+This option could also be set via environment variable `TESTOMATIO_NO_DETACHED=1`.
+If you don't want to pass it each time, create .env file in the root dir of your project with this variable set.
+
 
 ## Synchronous Import
 

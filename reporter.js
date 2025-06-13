@@ -25,9 +25,11 @@ class Reporter {
     return this.isCodecept ? 'codeceptjs' : 'Cucumber';
   }
 
-  getIds() {
+  getIds(opts = {}) {
     return new Promise((res, rej) => {
-      const req = request(`${URL.trim()}/api/test_data?api_key=${this.apiKey}`, { method: 'GET' }, (resp) => {
+      const params = new URLSearchParams(opts).toString();
+
+      const req = request(`${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`, { method: 'GET' }, (resp) => {
         // The whole response has been received. Print out the result.
         let message = '';
 

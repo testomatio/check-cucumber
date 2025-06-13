@@ -110,7 +110,7 @@ const parseFile = file => new Promise((resolve, reject) => {
  * @param {String} filePattern
  * @param {String} dir
  */
-const analyzeFeatureFiles = (filePattern, dir = '.') => {
+const analyzeFeatureFiles = (filePattern, dir = '.', excludePattern) => {
   workDir = dir;
 
   console.log('\n 🗄️  Parsing files\n');
@@ -119,7 +119,16 @@ const analyzeFeatureFiles = (filePattern, dir = '.') => {
   const promise = new Promise((resolve) => {
     const promiseArray = [];
     glob(pattern, (er, files) => {
-      for (const file of files) {
+      let filteredFiles = files;
+      
+      if (excludePattern) {
+        const excludeFullPattern = path.join(path.resolve(dir), excludePattern);
+        const excludedFiles = glob.sync(excludeFullPattern);
+        filteredFiles = files.filter(file => !excludedFiles.includes(file));
+        console.log('Excluded files:', excludedFiles);
+      }
+
+      for (const file of filteredFiles) {
         const data = parseFile(file);
         promiseArray.push(data);
       }

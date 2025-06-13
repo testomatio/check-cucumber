@@ -1,6 +1,10 @@
 const insertLine = require('insert-line');
 const fs = require('fs');
 
+const tagRegex = /\@[\w\d\=\-\_\(\)\.\:\&]*[\w\d]/g;
+const suiteRegex = /\@S[\w\d]{8}/g;
+const testRegex = /\@T[\w\d]{8}/g;
+
 const getSpace = (code) => {
   const lines = code.split('\n');
   let line = lines[0];
@@ -9,11 +13,11 @@ const getSpace = (code) => {
 };
 
 const getTitle = (name) => {
-  return name.replace(/@([\w\d\-\(\)\.\,\*:]+)/g, '').trim();
+  return name.replace(tagRegex, '').trim();
 }
 
 const parseTest = testTitle => {
-  const captures = testTitle.match(/@T([\w\d]+)/);
+  const captures = testTitle.match(testRegex);
   if (captures) {
     return captures[1];
   }
@@ -22,7 +26,7 @@ const parseTest = testTitle => {
 };
 
 const parseSuite = suiteTitle => {
-  const captures = suiteTitle.match(/@S([\w\d]+)/);
+  const captures = suiteTitle.match(suiteRegex);
   if (captures) {
     return captures[1];
   }
@@ -37,19 +41,28 @@ const insertLineToFile = (file, line, opts = { at: 1, overwrite: false }) => {
   fs.writeFileSync(file, lines.join("\n"));
 }
 
+const getLine = (file, line) => {
+  const fileContent = fs.readFileSync(file, 'utf8').toString();
+  const lines = fileContent.split(/\r\n|\r|\n/g);
+  return lines[line];  
+}
+
 function updateFiles(features, testomatioMap, workDir) {
   const files = [];
+
+  let hasOtherIds = false;
+
   for (const suite of features) {
     if (!suite.scenario) continue;
     if (!suite.scenario.length) continue;
-
+    
     let lineInc = 0;
     const featureFile = `${workDir}/${suite.scenario[0].file}`;
     files.push(featureFile);
-
+    
     const suiteName = getTitle(suite.feature);
     const fileName = suite.scenario[0].file;
-
+    
     let needsSuiteUpdate = true;
     if (!testomatioMap.suites[suiteName]) needsSuiteUpdate = false;
     if (suite.tags.includes(testomatioMap.suites[suiteName])) needsSuiteUpdate = false;
@@ -58,11 +71,20 @@ function updateFiles(features, testomatioMap, workDir) {
     if (needsSuiteUpdate) {
       let id = testomatioMap.suites[suiteName];
       if (testomatioMap.suites[`${fileName}#${suiteName}`]) id = testomatioMap.suites[`${fileName}#${suiteName}`];
-
+            
       const at = suite.line || 1;
-      if (suite.tags.length) {
-        const tags = suite.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-        insertLineToFile(featureFile, `${tags} ${id}`, { overwrite: true, at });
+
+      if (process.env.TESTOMATIO_TITLE_IDS) {
+        // ignore suite ids
+      } else if (suite.tags.length) {
+        const hasId = suite.tags.map(t => '@' + t).find(t => t === id);
+        if (hasId) continue;
+        if (suite.tags.find(t => t.match(suiteRegex))) {
+          hasOtherIds = true;
+          continue;
+        }
+        const tags = getLine(featureFile, at - 1).split(' ').filter(v => v.match(tagRegex))
+        insertLineToFile(featureFile, `${tags.join(' ')} ${id}`, { overwrite: true, at });
       } else {
         insertLineToFile(featureFile, `${id}`, { at });
         lineInc = 1;
@@ -79,17 +101,35 @@ function updateFiles(features, testomatioMap, workDir) {
       let id = testomatioMap.tests[name];
 
       if (testomatioMap.tests[`${suiteName}#${name}`]) id = testomatioMap.tests[`${suiteName}#${name}`];
-      if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];
+      if (testomatioMap.tests[`${fileName}#${suiteName}#${name}`]) id = testomatioMap.tests[`${fileName}#${suiteName}#${name}`];      
+
+      if (process.env.TESTOMATIO_TITLE_IDS) {
+        const lineInc = scenario.code.split('\n').findIndex(line => line.trim().startsWith('Scenario'));      
+        const at = scenario.line + lineInc;
+        const scenarioTitle = getLine(featureFile, at);
+        insertLineToFile(file, `${scenarioTitle} ${id}`, { overwrite: true, at: at + 1 });
+        continue;
+      }
 
       if (scenario.tags.length) {
-        const tags = scenario.tags.map(t => '@' + t).filter(t => t !== id).join(' ')
-        insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags} ${id}`.trim()), { overwrite: true, at: scenario.line + 1 + lineInc });
+        const hasId = scenario.tags.map(t => '@' + t).find(t => t === id);
+        if (hasId) continue;
+        if (suite.tags.find(t => t.match(suiteRegex))) {
+          hasOtherIds = true;
+          continue;
+        }
+        const at = scenario.line + 1 + lineInc;
+        const prevLine = getLine(file, at - 1)
+        const tags = prevLine.split(' ').filter(v => v.match(tagRegex))
+        insertLineToFile(file, ' '.repeat(spaceCount) + (`${tags.join(' ')} ${id}`.trim()), { overwrite: true, at });
       } else {
         insertLineToFile(file, `\n${' '.repeat(spaceCount)}${id}`, { overwrite: true, at: scenario.line + lineInc });
         lineInc += 1;
       }
     }
   }
+
+  if (hasOtherIds) console.log('WARNING: Some tests have IDs from another project. New IDs were ignored. Clean up old IDs with --clean-ids and re-run this command again.');
 
   return files;
 }
@@ -109,12 +149,22 @@ function cleanFiles(features, testomatioMap = {}, workDir, dangerous = false) {
     const suiteId = `@S${parseSuite(suiteTitle)}`;
 
     if (!dangerous) {
-      suiteIds.forEach(sid => fileContent = fileContent.replace(sid, ''))
-      testIds.forEach(tid => fileContent = fileContent.replace(tid, ''))
+      /*
+      Suite and test ids are always added with a new line,
+      therefore, when we want to remove ids - the whole line shold be removed.
+      The regex below includes:
+      1. [ \t]* – unlimited amount of spaces or tabs
+      2. suite or test id (sid/tid)
+      2. \\s - new line (or other whitespace characters)
+      */
+      suiteIds.forEach(sid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + sid + '\\s'), ''))
+      testIds.forEach(tid => fileContent = fileContent.replace(new RegExp('[ \\t]*' + tid + '\\s'), ''))
     } else {
-      fileContent = fileContent.replace(/(^|\s)@T([\w\d-]{8})/g, '');
-      fileContent = fileContent.replace(/(^|\s)@S([\w\d-]{8})/g, '');
+      fileContent = fileContent.replace(suiteRegex, '');
+      fileContent = fileContent.replace(testRegex, '');
     }
+
+    fileContent = fileContent.split('\n').map(l => l.replace(/\s+$/, '')).join('\n');
 
     files.push(file);
     fs.writeFileSync(file, fileContent, (err) => {

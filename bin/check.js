@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const program = require('commander');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -24,6 +25,7 @@ const branch = process.env.TESTOMATIO_BRANCH;
 program
   .arguments('<files>')
   .option('-d, --dir <dir>', 'Test directory')
+  .option('-e, --exclude <pattern>', 'Exclude files by glob pattern')
   .option('-c, --codeceptjs', 'Is codeceptJS project')
   .option('--sync', 'import tests to testomatio and wait for completion')
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
@@ -36,7 +38,7 @@ program
   .option('--no-detached', 'Don\t mark all unmatched tests as detached')
   .action(async (filesArg, opts) => {
     const isPattern = checkPattern(filesArg);
-    const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd());
+    const features = await analyze(filesArg || '**/*.feature', opts.dir || process.cwd(), opts.exclude);
     if (opts.cleanIds || opts.unsafeCleanIds) {
       let idMap = {};
       if (apiKey) {
@@ -65,6 +67,12 @@ program
             let fileName = file;
             if (process.env.TESTOMATIO_PREPEND_DIR) {
               fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
+            }
+            // make file path relative to TESTOMATIO_WORKDIR if provided
+            if (process.env.TESTOMATIO_WORKDIR && fileName) {
+              const workdir = path.resolve(process.env.TESTOMATIO_WORKDIR);
+              const absoluteTestPath = path.resolve(fileName);
+              fileName = path.relative(workdir, absoluteTestPath);
             }
             tests.push({
               name, suites: [suite.feature], tags, description, code, file: fileName, steps,
@@ -110,7 +118,7 @@ program
         branch,
         sync: opts.sync || opts.updateIds,
         noempty: !opts.empty,
-        'no-detach': !isPattern || !opts.detached,
+        'no-detach': process.env.TESTOMATIO_NO_DETACHED || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,
       });
@@ -122,7 +130,7 @@ program
       if (opts.updateIds) {
         console.log('Updating test IDs...');
         if (apiKey) {
-          reporter.getIds().then(idMap => {
+          reporter.getIds({ branch }).then(idMap => {
             const updatedFiles = updateFiles(features, idMap, opts.dir || process.cwd());
             console.log(`${updatedFiles.length} Files updated`);
           });
