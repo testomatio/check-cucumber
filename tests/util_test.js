@@ -187,6 +187,28 @@ describe('Utils', () => {
     //expect(file2).not.to.include('@T22222');
   });
 
+  it('should check for suite and test ids', async () => {
+    const workDir = path.join(__dirname, '..', 'example/features');
+    const features = await analyse('**/valid_sample.feature', workDir);
+    const { checkedFiles, suitesWithoutIds, testsWithoutIds } = util.checkFiles(
+      features,
+      workDir
+    );
+
+    expect(features.length).equal(1);
+    expect(checkedFiles).deep.equal([
+      path.join(workDir, 'valid_sample.feature')
+    ]);
+    expect(suitesWithoutIds).deep.equal([
+      'Business rules'
+    ]);
+    expect(testsWithoutIds).deep.equal([
+      'do something',
+      'do something twice',
+      'Search testomat in google'
+    ]);
+  });
+
   it('should clean suite and test ids with non-standard tags', async () => {
     createTestFiles('tags_examples');
     const tagIdMap = {

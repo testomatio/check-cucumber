@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const analyze = require('../analyzer');
 const Reporter = require('../reporter');
-const { updateFiles, cleanFiles } = require('../util');
+const { updateFiles, cleanFiles, checkFiles } = require('../util');
 
 function checkPattern(pattern) {
   pattern = pattern.trim(); // eslint-disable-line
@@ -31,6 +31,7 @@ program
   .option('-U, --update-ids', 'Update test and suite with testomatio ids')
   .option('--clean-ids', 'Remove testomatio ids from test and suite')
   .option('--purge, --unsafe-clean-ids', 'Remove testomatio ids from test and suite without server verification')
+  .option('--check-ids', 'Ensure that all suites and tests have testomatio ids before the import')
   .option('--create', 'Create tests and suites for missing IDs')
   .option('--no-empty', 'Remove empty suites after import')
   .option('--keep-structure', 'Prefer structure of source code over structure in Testomat.io')
@@ -96,6 +97,23 @@ program
           console.log(chalk.red(error));
         }
       }
+
+      if (opts.checkIds) {
+        console.log("Checking test IDs...");
+        const { checkedFiles, suitesWithoutIds, testsWithoutIds } = checkFiles(
+          features,
+          opts.dir || process.cwd()
+        );
+        console.log(`${checkedFiles.length} Files checked`);
+        if (suitesWithoutIds.length || testsWithoutIds.length) {
+          console.log(
+            `\n ⚠️  ${suitesWithoutIds.length} suites and ${testsWithoutIds.length} tests are missing test IDs!`
+          );
+          console.log("    Use the `--update-ids` flag to update the files.\n");
+          process.exit(1);
+        }
+      }
+
       const resp = reporter.send({
         branch,
         sync: opts.sync || opts.updateIds,
@@ -105,12 +123,11 @@ program
         create: opts.create || false,
       });
 
-      if (opts.sync) {
+      if (opts.sync || opts.updateIds) {
         console.log('    Wait for Testomatio to synchronize tests...');
         await resp;
       }
       if (opts.updateIds) {
-        await resp;
         console.log('Updating test IDs...');
         if (apiKey) {
           reporter.getIds({ branch }).then(idMap => {
