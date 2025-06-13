@@ -62,7 +62,6 @@ program
           const {
             name, description, code, file, steps, tags,
           } = scenario;
-          files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
           if (name) {
             let fileName = file;
             // make file path relative to TESTOMATIO_WORKDIR if provided
@@ -73,6 +72,10 @@ program
             }
             if (process.env.TESTOMATIO_PREPEND_DIR) {
               fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
+            }
+            // Store file content using the final fileName as key for consistency, but avoid duplicate reads
+            if (!files[fileName]) {
+              files[fileName] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
             }
             tests.push({
               name, suites: [suite.feature], tags, description, code, file: fileName, steps,
