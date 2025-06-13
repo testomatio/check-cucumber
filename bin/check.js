@@ -104,10 +104,10 @@ program
           features,
           opts.dir || process.cwd()
         );
-        console.log(`${checkedFiles.length} Files checked`);
+        console.log(` ${checkedFiles.length} Files checked`);
         if (suitesWithoutIds.length || testsWithoutIds.length) {
           console.log(
-            `\n ⚠️  ${suitesWithoutIds.length} suites and ${testsWithoutIds.length} tests are missing test IDs!`
+            `\n 🔴 ${suitesWithoutIds.length} suites and ${testsWithoutIds.length} tests are missing test IDs!`
           );
           console.log("    Use the `--update-ids` flag to update the files.\n");
           process.exit(1);
