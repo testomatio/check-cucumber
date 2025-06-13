@@ -65,14 +65,14 @@ program
           files[file] = fs.readFileSync(path.join(opts.dir || process.cwd(), file)).toString();
           if (name) {
             let fileName = file;
-            if (process.env.TESTOMATIO_PREPEND_DIR) {
-              fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
-            }
             // make file path relative to TESTOMATIO_WORKDIR if provided
             if (process.env.TESTOMATIO_WORKDIR && fileName) {
               const workdir = path.resolve(process.env.TESTOMATIO_WORKDIR);
               const absoluteTestPath = path.resolve(fileName);
               fileName = path.relative(workdir, absoluteTestPath);
+            }
+            if (process.env.TESTOMATIO_PREPEND_DIR) {
+              fileName = path.join(process.env.TESTOMATIO_PREPEND_DIR, file);
             }
             tests.push({
               name, suites: [suite.feature], tags, description, code, file: fileName, steps,
@@ -118,6 +118,7 @@ program
         branch,
         sync: opts.sync || opts.updateIds,
         noempty: !opts.empty,
+        suite: process.env.TESTOMATIO_SUITE,
         'no-detach': process.env.TESTOMATIO_NO_DETACHED || !opts.detached,
         structure: opts.keepStructure,
         create: opts.create || false,

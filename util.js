@@ -19,7 +19,7 @@ const getTitle = (name) => {
 const parseTest = testTitle => {
   const captures = testTitle.match(testRegex);
   if (captures) {
-    return captures[1];
+    return captures[0];
   }
 
   return null;
@@ -28,7 +28,7 @@ const parseTest = testTitle => {
 const parseSuite = suiteTitle => {
   const captures = suiteTitle.match(suiteRegex);
   if (captures) {
-    return captures[1];
+    return captures[0];
   }
 
   return null;
