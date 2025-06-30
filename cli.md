@@ -37,6 +37,8 @@ npx check-cucumber <files> [options]
 | `TESTOMATIO_WORKDIR` | Working directory for relative file paths | - |
 | `TESTOMATIO_SUITE` | Import tests to a speficic folder by its ID | - |
 | `TESTOMATIO_PREPEND_DIR` | Directory prefix for file names in reports | - |
+| `TESTOMATIO_LABELS` | Comma-separated labels to apply to all tests. Supports `label:value` format for label values | - |
+| `TESTOMATIO_SYNC_LABELS` | Alias for TESTOMATIO_LABELS (compatibility) | - |
 | `TESTOMATIO_NO_DETACHED` | Don't mark unmatched tests as detached | - |
 | `TESTOMATIO_TITLE_IDS` | Add test IDs to titles instead of tags | - |
 
@@ -96,4 +98,14 @@ TESTOMATIO_PREPEND_DIR=cucumber npx check-cucumber
 ```shell
 # Sync tests for specific branch
 TESTOMATIO=<api-key> TESTOMATIO_BRANCH=feature/new-tests npx check-cucumber --sync
+```
+
+### Label Management
+
+```shell
+# Apply labels to all tests
+TESTOMATIO_LABELS="smoke,regression" npx check-cucumber --sync
+
+# Apply labels with values using label:value format
+TESTOMATIO_LABELS="severity:high,feature:auth" npx check-cucumber --sync
 ```
