@@ -5,9 +5,24 @@ const Reporter = require('../reporter');
 describe('Reporter', () => {
   const API_KEY = 'test-api-key';
   const BASE_URL = process.env.TESTOMATIO_URL || 'https://app.testomat.io';
+  let originalEnvVars;
+  
+  beforeEach(() => {
+    originalEnvVars = {
+      TESTOMATIO_LABELS: process.env.TESTOMATIO_LABELS,
+      TESTOMATIO_SYNC_LABELS: process.env.TESTOMATIO_SYNC_LABELS,
+    };
+  });
   
   afterEach(() => {
     nock.cleanAll();
+    Object.keys(originalEnvVars).forEach(key => {
+      if (originalEnvVars[key] !== undefined) {
+        process.env[key] = originalEnvVars[key];
+      } else {
+        delete process.env[key];
+      }
+    });
   });
 
   describe('constructor', () => {
@@ -128,6 +143,51 @@ describe('Reporter', () => {
       } catch (error) {
         expect(error.message).to.equal('Network error');
       }
+    });
+  });
+
+  describe('parseLabels', () => {
+    it('should return empty array for null/undefined input', () => {
+      const reporter = new Reporter(API_KEY);
+      expect(reporter.parseLabels(null)).to.deep.equal([]);
+      expect(reporter.parseLabels(undefined)).to.deep.equal([]);
+      expect(reporter.parseLabels('')).to.deep.equal([]);
+    });
+
+    it('should parse single label', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels('smoke');
+      expect(result).to.deep.equal(['smoke']);
+    });
+
+    it('should parse multiple comma-separated labels', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels('smoke,regression,api');
+      expect(result).to.deep.equal(['smoke', 'regression', 'api']);
+    });
+
+    it('should trim whitespace from labels', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels(' smoke , regression , api ');
+      expect(result).to.deep.equal(['smoke', 'regression', 'api']);
+    });
+
+    it('should filter out empty labels', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels('smoke,,regression,');
+      expect(result).to.deep.equal(['smoke', 'regression']);
+    });
+
+    it('should handle label:value format', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels('severity:high,feature:auth,team:backend');
+      expect(result).to.deep.equal(['severity:high', 'feature:auth', 'team:backend']);
+    });
+
+    it('should handle mixed simple labels and label:value format', () => {
+      const reporter = new Reporter(API_KEY);
+      const result = reporter.parseLabels('smoke,severity:critical,regression,feature:user_account');
+      expect(result).to.deep.equal(['smoke', 'severity:critical', 'regression', 'feature:user_account']);
     });
   });
 
@@ -268,6 +328,175 @@ describe('Reporter', () => {
       
       expect(requestHeaders['content-type']).to.equal('application/json');
       expect(requestHeaders['content-length']).to.exist;
+    });
+
+    describe('labels functionality', () => {
+      it('should not add labels property when TESTOMATIO_LABELS is not set', async () => {
+        delete process.env.TESTOMATIO_LABELS;
+        delete process.env.TESTOMATIO_SYNC_LABELS;
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+
+        await reporter.send();
+
+        expect(requestBody.tests).to.have.length(1);
+        expect(requestBody.tests[0]).to.not.have.property('labels');
+      });
+
+      it('should add labels to all tests when TESTOMATIO_LABELS is set', async () => {
+        process.env.TESTOMATIO_LABELS = 'smoke,regression';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([
+          { name: 'Test 1', file: 'test1.feature' },
+          { name: 'Test 2', file: 'test2.feature' }
+        ]);
+
+        await reporter.send();
+
+        expect(requestBody.tests).to.have.length(2);
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['smoke', 'regression']);
+        expect(requestBody.tests[1]).to.have.property('labels');
+        expect(requestBody.tests[1].labels).to.deep.equal(['smoke', 'regression']);
+      });
+
+      it('should handle single label in TESTOMATIO_LABELS', async () => {
+        process.env.TESTOMATIO_LABELS = 'smoke';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+
+        await reporter.send();
+
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['smoke']);
+      });
+
+      it('should use TESTOMATIO_SYNC_LABELS when TESTOMATIO_LABELS is not set', async () => {
+        delete process.env.TESTOMATIO_LABELS;
+        process.env.TESTOMATIO_SYNC_LABELS = 'api,integration';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+
+        await reporter.send();
+
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['api', 'integration']);
+      });
+
+      it('should prioritize TESTOMATIO_LABELS over TESTOMATIO_SYNC_LABELS when both are set', async () => {
+        process.env.TESTOMATIO_LABELS = 'smoke,regression';
+        process.env.TESTOMATIO_SYNC_LABELS = 'api,integration';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+
+        await reporter.send();
+
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['smoke', 'regression']);
+      });
+
+      it('should handle label:value format', async () => {
+        process.env.TESTOMATIO_LABELS = 'severity:high,feature:auth';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY);
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+
+        await reporter.send();
+
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['severity:high', 'feature:auth']);
+      });
+
+      it('should include labels in payload alongside framework and language', async () => {
+        process.env.TESTOMATIO_LABELS = 'e2e,cucumber';
+
+        let requestBody;
+
+        nock(BASE_URL)
+          .post('/api/load', function(body) {
+            requestBody = body;
+            return true;
+          })
+          .query({ api_key: API_KEY })
+          .reply(200, 'Success');
+
+        const reporter = new Reporter(API_KEY, true); // codecept = true
+        reporter.addTests([{ name: 'Test 1', file: 'test.feature' }]);
+        reporter.addFiles({ 'test.feature': 'Feature content' });
+
+        await reporter.send();
+
+        expect(requestBody.framework).to.equal('codeceptjs');
+        expect(requestBody.language).to.equal('gherkin');
+        expect(requestBody.tests[0]).to.have.property('labels');
+        expect(requestBody.tests[0].labels).to.deep.equal(['e2e', 'cucumber']);
+        expect(requestBody.files).to.deep.equal({ 'test.feature': 'Feature content' });
+      });
     });
   });
 });

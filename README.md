@@ -153,6 +153,18 @@ TESTOMATIO_PREPEND_DIR="MyTESTS" TESTOMATIO=API_KEY npx check-cucumber -d exampl
 
 This creates a new suite folder named "MyTESTS" and imports all tests under it, preserving the original file structure within that folder.
 
+### Apply Labels to Tests
+
+You can apply labels to all imported tests using the `TESTOMATIO_LABELS` environment variable:
+
+```bash
+# Apply labels to all tests
+TESTOMATIO_LABELS="smoke,regression" TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
+
+# Apply labels with values using label:value format
+TESTOMATIO_LABELS="severity:high,feature:auth" TESTOMATIO=API_KEY npx check-cucumber -d example/cucumber
+```
+
 ### Import Manual BDD Tests From Source Code
 
 If you have manual tests in the repository and want to import them into Testomatio you can use `.manual.feature` extension in the feature file. Tests will be imported as well as automated tests and will be marked as `manual` in Testomatio. For instance:

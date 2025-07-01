@@ -21,6 +21,15 @@ class Reporter {
     this.files = files;
   }
 
+  parseLabels(labelsString) {
+    if (!labelsString) return [];
+
+    return labelsString
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => label.length > 0);
+  }
+
   getFramework() {
     return this.isCodecept ? 'codeceptjs' : 'Cucumber';
   }
@@ -62,8 +71,17 @@ class Reporter {
   send(opts = {}) {
     return new Promise((resolve, reject) => {
       if (this.apiKey) {
+        const labelsFromEnv = this.parseLabels(process.env.TESTOMATIO_LABELS || process.env.TESTOMATIO_SYNC_LABELS);
+
+        const tests = this.tests.map(test => {
+          if (labelsFromEnv.length > 0) {
+            test.labels = labelsFromEnv;
+          }
+          return test;
+        });
+
         const data = JSON.stringify({
-          ...opts, tests: this.tests, files: this.files, framework: this.getFramework(), language: 'gherkin',
+          ...opts, tests, files: this.files, framework: this.getFramework(), language: 'gherkin',
         });
 
         console.log('\n 🚀 Sending data to testomat.io\n');
