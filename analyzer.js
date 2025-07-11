@@ -114,22 +114,23 @@ const analyzeFeatureFiles = (filePattern, dir = '.', excludePattern) => {
   workDir = dir;
 
   console.log('\n 🗄️  Parsing files\n');
-  const pattern = path.join(dir, filePattern);
 
   const promise = new Promise((resolve) => {
     const promiseArray = [];
-    glob(pattern, (er, files) => {
+    
+    // Use cwd option instead of changing process directory
+    glob(filePattern, { cwd: dir }, (er, files) => {
       let filteredFiles = files;
       
       if (excludePattern) {
-        const excludeFullPattern = path.join(path.resolve(dir), excludePattern);
-        const excludedFiles = glob.sync(excludeFullPattern);
+        const excludedFiles = glob.sync(excludePattern, { cwd: dir });
         filteredFiles = files.filter(file => !excludedFiles.includes(file));
         console.log('Excluded files:', excludedFiles);
       }
 
       for (const file of filteredFiles) {
-        const data = parseFile(file);
+        const fullPath = path.join(dir, file);
+        const data = parseFile(fullPath);
         promiseArray.push(data);
       }
 

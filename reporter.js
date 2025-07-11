@@ -68,6 +68,41 @@ class Reporter {
     });
   }
 
+  getFilesFromServer(opts = {}) {
+    return new Promise((res, rej) => {
+      const params = new URLSearchParams({ with_files: 'true', ...opts }).toString();
+
+      const req = request(`${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`, { method: 'GET' }, (resp) => {
+        let message = '';
+
+        resp.on('end', () => {
+          if (resp.statusCode !== 200) {
+            console.log(' ✖️ Failed to fetch files from Testomat.io:', message);
+            rej(new Error(message));
+          } else {
+            res(JSON.parse(message));
+          }
+        });
+
+        resp.on('data', (chunk) => {
+          message += chunk.toString();
+        });
+
+        resp.on('aborted', () => {
+          console.log(' ✖️ Request to Testomat.io was aborted');
+          rej(new Error('Request aborted'));
+        });
+      });
+
+      req.on('error', (err) => {
+        console.log(`Error: ${err.message}`);
+        rej(err);
+      });
+
+      req.end();
+    });
+  }
+
   send(opts = {}) {
     return new Promise((resolve, reject) => {
       if (this.apiKey) {

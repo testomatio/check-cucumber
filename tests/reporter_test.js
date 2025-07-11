@@ -45,6 +45,115 @@ describe('Reporter', () => {
     });
   });
 
+  describe('getFilesFromServer', () => {
+    it('should fetch files from server successfully', async () => {
+      const mockResponse = {
+        files: {
+          'test1.manual.feature': 'Feature: Test 1\n  Scenario: Test scenario',
+          'folder/test2.manual.feature': 'Feature: Test 2\n  Scenario: Another scenario'
+        },
+        tests: [
+          { id: '@T123', name: 'Test scenario', suite_id: '@S456' }
+        ],
+        suites: [
+          { id: '@S456', name: 'Test Suite' }
+        ]
+      };
+
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ api_key: API_KEY, with_files: 'true' })
+        .reply(200, mockResponse);
+
+      const reporter = new Reporter(API_KEY);
+      const result = await reporter.getFilesFromServer();
+
+      expect(result).to.deep.equal(mockResponse);
+    });
+
+    it('should handle server errors', async () => {
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ api_key: API_KEY, with_files: 'true' })
+        .reply(500, 'Internal Server Error');
+
+      const reporter = new Reporter(API_KEY);
+
+      try {
+        await reporter.getFilesFromServer();
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error.message).to.include('Internal Server Error');
+      }
+    });
+
+    it('should handle network errors', async () => {
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ api_key: API_KEY, with_files: 'true' })
+        .replyWithError('Network error');
+
+      const reporter = new Reporter(API_KEY);
+
+      try {
+        await reporter.getFilesFromServer();
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error.message).to.include('Network error');
+      }
+    });
+
+    it('should pass additional options as query parameters', async () => {
+      const mockResponse = { files: {} };
+
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ 
+          api_key: API_KEY, 
+          with_files: 'true', 
+          branch: 'main',
+          suite: 'manual-tests'
+        })
+        .reply(200, mockResponse);
+
+      const reporter = new Reporter(API_KEY);
+      const result = await reporter.getFilesFromServer({ 
+        branch: 'main', 
+        suite: 'manual-tests' 
+      });
+
+      expect(result).to.deep.equal(mockResponse);
+    });
+
+    it('should handle empty response', async () => {
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ api_key: API_KEY, with_files: 'true' })
+        .reply(200, {});
+
+      const reporter = new Reporter(API_KEY);
+      const result = await reporter.getFilesFromServer();
+
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle aborted requests', async () => {
+      nock(BASE_URL)
+        .get('/api/test_data')
+        .query({ api_key: API_KEY, with_files: 'true' })
+        .replyWithError('Request aborted');
+
+      const reporter = new Reporter(API_KEY);
+
+      try {
+        await reporter.getFilesFromServer();
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error.message).to.include('Request aborted');
+      }
+    });
+  });
+
   describe('getFramework', () => {
     it('should return Cucumber by default', () => {
       const reporter = new Reporter(API_KEY);
