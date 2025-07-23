@@ -1,11 +1,11 @@
-const URL = process.env.TESTOMATIO_URL || 'https://app.testomat.io';
-const isHttps = URL.startsWith('https');
-const { request } = isHttps ? require('https') : require('http');
+const URL = process.env.TESTOMATIO_URL || "https://app.testomat.io";
+const isHttps = URL.startsWith("https");
+const { request } = isHttps ? require("https") : require("http");
 
 class Reporter {
   constructor(apiKey, isCodecept) {
     if (!apiKey) {
-      console.error('✖️  Cant send report, api key not set');
+      console.error("✖️  Cant send report, api key not set");
     }
     this.apiKey = apiKey;
     this.tests = [];
@@ -25,41 +25,41 @@ class Reporter {
     if (!labelsString) return [];
 
     return labelsString
-      .split(',')
-      .map(label => label.trim())
-      .filter(label => label.length > 0);
-  }
-
-  getFramework() {
-    return this.isCodecept ? 'codeceptjs' : 'Cucumber';
+      .split(",")
+      .map((label) => label.trim())
+      .filter((label) => label.length > 0);
   }
 
   getIds(opts = {}) {
     return new Promise((res, rej) => {
       const params = new URLSearchParams(opts).toString();
 
-      const req = request(`${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`, { method: 'GET' }, (resp) => {
-        // The whole response has been received. Print out the result.
-        let message = '';
+      const req = request(
+        `${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`,
+        { method: "GET" },
+        (resp) => {
+          // The whole response has been received. Print out the result.
+          let message = "";
 
-        resp.on('end', () => {
-          if (resp.statusCode !== 200) {
-            rej(message);
-          } else {
-            res(JSON.parse(message));
-          }
-        });
+          resp.on("end", () => {
+            if (resp.statusCode !== 200) {
+              rej(message);
+            } else {
+              res(JSON.parse(message));
+            }
+          });
 
-        resp.on('data', (chunk) => {
-          message += chunk.toString();
-        });
+          resp.on("data", (chunk) => {
+            message += chunk.toString();
+          });
 
-        resp.on('aborted', () => {
-          console.log(' ✖️ Data was not sent to Testomat.io');
-        });
-      });
+          resp.on("aborted", () => {
+            console.log(" ✖️ Data was not sent to Testomat.io");
+          });
+        },
+      );
 
-      req.on('error', (err) => {
+      req.on("error", (err) => {
         console.log(`Error: ${err.message}`);
         rej(err);
       });
@@ -70,31 +70,41 @@ class Reporter {
 
   getFilesFromServer(opts = {}) {
     return new Promise((res, rej) => {
-      const params = new URLSearchParams({ with_files: 'true', ...opts }).toString();
+      const params = new URLSearchParams({
+        with_files: "true",
+        ...opts,
+      }).toString();
 
-      const req = request(`${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`, { method: 'GET' }, (resp) => {
-        let message = '';
+      const req = request(
+        `${URL.trim()}/api/test_data?api_key=${this.apiKey}&${params}`,
+        { method: "GET" },
+        (resp) => {
+          let message = "";
 
-        resp.on('end', () => {
-          if (resp.statusCode !== 200) {
-            console.log(' ✖️ Failed to fetch files from Testomat.io:', message);
-            rej(new Error(message));
-          } else {
-            res(JSON.parse(message));
-          }
-        });
+          resp.on("end", () => {
+            if (resp.statusCode !== 200) {
+              console.log(
+                " ✖️ Failed to fetch files from Testomat.io:",
+                message,
+              );
+              rej(new Error(message));
+            } else {
+              res(JSON.parse(message));
+            }
+          });
 
-        resp.on('data', (chunk) => {
-          message += chunk.toString();
-        });
+          resp.on("data", (chunk) => {
+            message += chunk.toString();
+          });
 
-        resp.on('aborted', () => {
-          console.log(' ✖️ Request to Testomat.io was aborted');
-          rej(new Error('Request aborted'));
-        });
-      });
+          resp.on("aborted", () => {
+            console.log(" ✖️ Request to Testomat.io was aborted");
+            rej(new Error("Request aborted"));
+          });
+        },
+      );
 
-      req.on('error', (err) => {
+      req.on("error", (err) => {
         console.log(`Error: ${err.message}`);
         rej(err);
       });
@@ -106,9 +116,11 @@ class Reporter {
   send(opts = {}) {
     return new Promise((resolve, reject) => {
       if (this.apiKey) {
-        const labelsFromEnv = this.parseLabels(process.env.TESTOMATIO_LABELS || process.env.TESTOMATIO_SYNC_LABELS);
+        const labelsFromEnv = this.parseLabels(
+          process.env.TESTOMATIO_LABELS || process.env.TESTOMATIO_SYNC_LABELS,
+        );
 
-        const tests = this.tests.map(test => {
+        const tests = this.tests.map((test) => {
           if (labelsFromEnv.length > 0) {
             test.labels = labelsFromEnv;
           }
@@ -116,41 +128,48 @@ class Reporter {
         });
 
         const data = JSON.stringify({
-          ...opts, tests, files: this.files, framework: this.getFramework(), language: 'gherkin',
+          ...opts,
+          tests,
+          files: this.files,
+          language: "gherkin",
         });
 
-        console.log('\n 🚀 Sending data to testomat.io\n');
-        const req = request(`${URL.trim()}/api/load?api_key=${this.apiKey}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(data),
+        console.log("\n 🚀 Sending data to testomat.io\n");
+        const req = request(
+          `${URL.trim()}/api/load?api_key=${this.apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(data),
+            },
           },
-        }, (resp) => {
-          // The whole response has been received. Print out the result.
-          let message = '';
+          (resp) => {
+            // The whole response has been received. Print out the result.
+            let message = "";
 
-          resp.on('end', () => {
-            if (resp.statusCode >= 400) {
-              console.log(' ✖️ ', message);
-            } else {
-              console.log(' 🎉 Data sent to Testomat.io');
-            }
-            resolve();
-          });
+            resp.on("end", () => {
+              if (resp.statusCode >= 400) {
+                console.log(" ✖️ ", message);
+              } else {
+                console.log(" 🎉 Data sent to Testomat.io");
+              }
+              resolve();
+            });
 
-          resp.on('data', (chunk) => {
-            message += chunk.toString();
-          });
+            resp.on("data", (chunk) => {
+              message += chunk.toString();
+            });
 
-          resp.on('aborted', () => {
-            console.log(' ✖️ Data was not sent to Testomat.io');
-            reject(new Error('aborted'));
-          });
-        });
+            resp.on("aborted", () => {
+              console.log(" ✖️ Data was not sent to Testomat.io");
+              reject(new Error("aborted"));
+            });
+          },
+        );
 
-        req.on('error', err => {
-          console.log(' ✖️  Error: Server cannot be reached');
+        req.on("error", (err) => {
+          console.log(" ✖️  Error: Server cannot be reached");
           reject(err);
         });
 
