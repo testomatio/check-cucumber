@@ -6,6 +6,8 @@
 
 ```shell
 npx check-cucumber <files> [options]
+npx check-cucumber pull [options]
+npx check-cucumber push [options]
 ```
 
 ## CLI Options
@@ -25,6 +27,13 @@ npx check-cucumber <files> [options]
 | `--no-empty` | Remove empty suites after import | `false` |
 | `--keep-structure` | Prefer source code structure over Testomat.io structure | `false` |
 | `--no-detached` | Don't mark unmatched tests as detached | `false` |
+
+## Pull Command Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-d, --dir <dir>` | Target directory for pulled files | Current directory |
+| `--dry-run` | Show what files would be created without creating them | `false` |
 
 ## Environment Variables
 
@@ -108,4 +117,17 @@ TESTOMATIO_LABELS="smoke,regression" npx check-cucumber --sync
 
 # Apply labels with values using label:value format
 TESTOMATIO_LABELS="severity:high,feature:auth" npx check-cucumber --sync
+```
+
+### Pulling Tests from Testomat.io
+
+```shell
+# Pull manual tests from Testomat.io as .feature files
+TESTOMATIO=<api-key> npx check-cucumber pull
+
+# Pull to specific directory
+TESTOMATIO=<api-key> npx check-cucumber pull --dir features/manual
+
+# Preview what files would be created (dry run)
+TESTOMATIO=<api-key> npx check-cucumber pull --dry-run
 ```

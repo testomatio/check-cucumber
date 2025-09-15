@@ -173,6 +173,36 @@ If you have manual tests in the repository and want to import them into Testomat
 mark-as-completed.manual.feature
 ```
 
+## Pull Tests from Testomat.io
+
+You can pull feature files from Testomat.io and write the as `.feature` files in your local repository using the `pull` command
+
+> ⚠️ This command will overwrite existing `.feature` files with the same name. Please commit your changes before running this command.
+
+```bash
+TESTOMATIO=API_KEY npx check-cucumber pull
+```
+
+### Pull Options:
+
+- `-d, --dir <dir>` - Target directory for pulled files (default: current directory)
+- `--dry-run` - Preview what files would be created without actually creating them
+
+### Examples:
+
+```bash
+# Pull tests to current directory
+TESTOMATIO=API_KEY npx check-cucumber pull
+
+# Pull tests to specific directory
+TESTOMATIO=API_KEY npx check-cucumber pull --dir features/manual
+
+# Preview files without creating them
+TESTOMATIO=API_KEY npx check-cucumber pull --dry-run
+```
+
+The pull command fetches manual tests from your Testomat.io project and creates corresponding `.feature` files with the proper Gherkin syntax. This allows you to maintain manual tests in your repository alongside automated tests.
+
 ---
 
 All available options [here](./cli.md)
