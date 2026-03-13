@@ -51,4 +51,38 @@ describe('Analyzer', () => {
     const features = await analyse('**/empty.feature', path.join(__dirname, '..', 'example'));
     expect(features[0].error).not.equal(undefined);
   });
+
+  it('Should include scenarios from rules', async () => {
+    const features = await analyse('**/rules.feature', path.join(__dirname, '..', 'example'));
+    const scenarios = features.reduce((acc, feature) => {
+      acc.push(...feature.scenario);
+      return acc;
+    }, []);
+    const scenariosTitles = scenarios.map(scenarioData => scenarioData.name);
+
+    expect(features.length).equal(1);
+    expect(scenariosTitles).to.include('Scenario 1.1');
+    expect(scenariosTitles).to.include('Scenario 1.2');
+    expect(scenariosTitles).to.include('Scenario 1.3');
+    expect(scenariosTitles).to.include('Scenario 2.1');
+    expect(scenariosTitles).to.include('Scenario 2.2');
+    expect(scenariosTitles).to.include('Scenario 2.3');
+    expect(scenariosTitles).to.include('Scenario 3.1');
+    expect(scenariosTitles).to.include('Scenario 3.2');
+    expect(scenariosTitles).to.include('Scenario 3.3');
+    expect(scenarios.length).equal(9);
+  });
+  it('Should extract the code of scenarios in rules', async () => {
+    const features = await analyse('**/rules.feature', path.join(__dirname, '..', 'example'));
+    const scenarios = features.reduce((acc, feature) => {
+      acc.push(...feature.scenario);
+      return acc;
+    }, []);
+
+    for (let scenario of scenarios) {
+      expect(scenario.code).to.include("Scenario");
+      expect(scenario.code).to.not.include("Rule");
+      expect(scenario.code.split('\n').length).to.equal(7);
+    }
+  });
 });
