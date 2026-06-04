@@ -93,6 +93,25 @@ Feature: User Management
       expect(content).to.include('Feature: Deep Test');
     });
 
+    it('should generate a fallback file name for empty server file paths', async () => {
+      mockReporter.getFilesFromServer = () =>
+        Promise.resolve({
+          files: {
+            '': `Feature: Missing Source Path
+  Scenario: Pulled from Testomat
+    Given a feature has no source path`
+          }
+        });
+
+      await pull.execute();
+
+      const fallbackFile = path.join(testDir, 'missing_source_path.feature');
+      expect(fs.existsSync(fallbackFile)).to.be.true;
+
+      const content = fs.readFileSync(fallbackFile, 'utf8');
+      expect(content).to.include('Feature: Missing Source Path');
+    });
+
     it('should handle empty server response', async () => {
       mockReporter.getFilesFromServer = () => Promise.resolve({ files: {} });
 
