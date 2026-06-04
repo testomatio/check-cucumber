@@ -33,10 +33,12 @@ class Pull {
 
       const filesCreated = [];
       const fileTree = {};
+      const usedFileNames = new Set(Object.keys(data.files).filter(Boolean));
 
       // Process files from server - server now sends .feature files directly
       for (const [fileName, content] of Object.entries(data.files)) {
-        const targetPath = path.join(this.targetDir, fileName);
+        const resolvedFileName = fileName || this.fallbackFileName(content, usedFileNames);
+        const targetPath = path.join(this.targetDir, resolvedFileName);
         const targetDir = path.dirname(targetPath);
 
         // Create directory structure
@@ -75,6 +77,31 @@ class Pull {
     }
   }
 
+
+  /**
+   * Generate a fallback filename when the server returns an empty path.
+   * @param {string} content - Feature file content
+   * @param {Set<string>} usedFileNames - File names already reserved for this pull
+   * @returns {string} Safe fallback file name
+   */
+  fallbackFileName(content, usedFileNames) {
+    const match = (content || '').match(/^\s*Feature:\s*(.+)$/m);
+    const baseName = (match ? match[1] : 'feature')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 120) || 'feature';
+    let fileName = `${baseName}.feature`;
+    let counter = 2;
+
+    while (usedFileNames.has(fileName)) {
+      fileName = `${baseName}_${counter}.feature`;
+      counter += 1;
+    }
+
+    usedFileNames.add(fileName);
+    return fileName;
+  }
 
   /**
    * Add file to tree structure for display
